@@ -1,0 +1,265 @@
+{
+  "case_id": "C",
+  "events": [
+    {
+      "event_id": "C-E01",
+      "case_id": "C",
+      "event_type": "visit",
+      "description": "In-person visit at Elm Clinic for left shoulder pain",
+      "status": "completed",
+      "date": "2025-04-02",
+      "date_precision": "day",
+      "date_interval": null,
+      "alternative_dates": [],
+      "needs_review": false,
+      "review_reasons": [],
+      "sources": [
+        {
+          "document_id": "C01",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "Patient C attended an in-person visit at Elm Clinic on 2 April 2025 for left shoulder pain.",
+          "date_text": "2 April 2025"
+        }
+      ]
+    },
+    {
+      "event_id": "C-E02",
+      "case_id": "C",
+      "event_type": "medication_start",
+      "description": "Paracetamol started",
+      "status": "completed",
+      "date": "2025-04-02",
+      "date_precision": "day",
+      "date_interval": null,
+      "alternative_dates": [],
+      "needs_review": false,
+      "review_reasons": [],
+      "sources": [
+        {
+          "document_id": "C01",
+          "line_start": 9,
+          "line_end": 9,
+          "quote": "Patient C started taking paracetamol on 2 April 2025.",
+          "date_text": "2 April 2025"
+        }
+      ]
+    },
+    {
+      "event_id": "C-E03",
+      "case_id": "C",
+      "event_type": "procedure",
+      "description": "Scheduled left shoulder MRI CM-20",
+      "status": "planned",
+      "date": "2025-04-20",
+      "date_precision": "day",
+      "date_interval": null,
+      "alternative_dates": [],
+      "needs_review": false,
+      "review_reasons": [],
+      "sources": [
+        {
+          "document_id": "C01",
+          "line_start": 10,
+          "line_end": 10,
+          "quote": "A left shoulder MRI, booking CM-20, is scheduled for 20 April 2025. It has not yet been performed.",
+          "date_text": "20 April 2025"
+        },
+        {
+          "document_id": "C04",
+          "line_start": 11,
+          "line_end": 11,
+          "quote": "The MRI booking CM-20 remains scheduled for 20 April 2025 and has not yet been performed.",
+          "date_text": "20 April 2025"
+        }
+      ]
+    },
+    {
+      "event_id": "C-E04",
+      "case_id": "C",
+      "event_type": "visit",
+      "description": "Assessment at Willow Therapy",
+      "status": "completed",
+      "date": "2025-04-12",
+      "date_precision": "day",
+      "date_interval": null,
+      "alternative_dates": [],
+      "needs_review": false,
+      "review_reasons": [],
+      "sources": [
+        {
+          "document_id": "C02",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "Patient C attended an assessment visit at Willow Therapy on 12 April 2025.",
+          "date_text": "12 April 2025"
+        }
+      ]
+    },
+    {
+      "event_id": "C-E05",
+      "case_id": "C",
+      "event_type": "procedure",
+      "description": "First supervised left shoulder exercise therapy session CT-01",
+      "status": "completed",
+      "date": null,
+      "date_precision": "month",
+      "date_interval": {
+        "start": "2025-03-01",
+        "end": "2025-03-31"
+      },
+      "alternative_dates": [],
+      "needs_review": true,
+      "review_reasons": [
+        "approximate_date"
+      ],
+      "sources": [
+        {
+          "document_id": "C02",
+          "line_start": 9,
+          "line_end": 9,
+          "quote": "The patient reports that the first supervised left shoulder exercise therapy session, session CT-01 at Willow Therapy, took place sometime in March 2025; the exact day is unknown.",
+          "date_text": "sometime in March 2025"
+        }
+      ]
+    },
+    {
+      "event_id": "C-E06",
+      "case_id": "C",
+      "event_type": "procedure",
+      "description": "Left shoulder ultrasound CU-77",
+      "status": "completed",
+      "date": null,
+      "date_precision": "conflicting",
+      "date_interval": null,
+      "alternative_dates": [
+        "2025-04-14",
+        "2025-04-15"
+      ],
+      "needs_review": true,
+      "review_reasons": [
+        "conflicting_dates"
+      ],
+      "sources": [
+        {
+          "document_id": "C03",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "A left shoulder ultrasound for patient C, imaging reference CU-77, is recorded as performed on 14 April 2025.",
+          "date_text": "14 April 2025"
+        },
+        {
+          "document_id": "C04",
+          "line_start": 9,
+          "line_end": 9,
+          "quote": "The imaging log lists the same left shoulder ultrasound, reference CU-77, as performed on 15 April 2025. This conflicts with the imaging report; neither date has been verified.",
+          "date_text": "15 April 2025"
+        }
+      ]
+    },
+    {
+      "event_id": "C-E07",
+      "case_id": "C",
+      "event_type": "visit",
+      "description": "Follow-up visit at Elm Clinic",
+      "status": "completed",
+      "date": "2025-04-17",
+      "date_precision": "day",
+      "date_interval": null,
+      "alternative_dates": [],
+      "needs_review": false,
+      "review_reasons": [],
+      "sources": [
+        {
+          "document_id": "C04",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "Patient C attended a follow-up visit at Elm Clinic on 17 April 2025.",
+          "date_text": "17 April 2025"
+        }
+      ]
+    },
+    {
+      "event_id": "C-E08",
+      "case_id": "C",
+      "event_type": "procedure",
+      "description": "Scheduled left shoulder X-ray CX-18",
+      "status": "planned",
+      "date": "2025-04-18",
+      "date_precision": "day",
+      "date_interval": null,
+      "alternative_dates": [],
+      "needs_review": false,
+      "review_reasons": [],
+      "sources": [
+        {
+          "document_id": "C04",
+          "line_start": 10,
+          "line_end": 10,
+          "quote": "A left shoulder X-ray, reference CX-18, is scheduled for 18 April 2025 and has not yet been performed.",
+          "date_text": "18 April 2025"
+        }
+      ]
+    }
+  ],
+  "exclusions": [
+    {
+      "case_id": "C",
+      "reason": "Hypothetical intervention, not a definite plan or completed procedure.",
+      "source": {
+        "document_id": "C01",
+        "line_start": 11,
+        "line_end": 11,
+        "quote": "An injection was discussed as a possibility only; none was ordered, scheduled or given.",
+        "date_text": null
+      }
+    },
+    {
+      "case_id": "C",
+      "reason": "Home exercise discussion is outside the supervised-procedure scope.",
+      "source": {
+        "document_id": "C02",
+        "line_start": 10,
+        "line_end": 10,
+        "quote": "An independent home exercise programme was discussed today; it is not a supervised treatment session.",
+        "date_text": null
+      }
+    },
+    {
+      "case_id": "C",
+      "reason": "Document authoring date, not an event date.",
+      "source": {
+        "document_id": "C03",
+        "line_start": 9,
+        "line_end": 9,
+        "quote": "This report was written on 15 April 2025.",
+        "date_text": null
+      }
+    },
+    {
+      "case_id": "C",
+      "reason": "Administrative address change is outside scope.",
+      "source": {
+        "document_id": "C05",
+        "line_start": 8,
+        "line_end": 8,
+        "quote": "An administrator updated the preferred correspondence address for patient C on 18 April 2025.",
+        "date_text": null
+      }
+    },
+    {
+      "case_id": "C",
+      "reason": "Explicit absence of in-scope clinical information.",
+      "source": {
+        "document_id": "C05",
+        "line_start": 9,
+        "line_end": 9,
+        "quote": "This is not a clinical encounter. This document contains no treatment, medication-start or appointment-status information.",
+        "date_text": null
+      }
+    }
+  ],
+  "zero_event_documents": [
+    "C05"
+  ]
+}

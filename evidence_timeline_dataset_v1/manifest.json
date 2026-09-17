@@ -1,0 +1,113 @@
+{
+  "dataset_version": "1.0.0",
+  "synthetic": true,
+  "splits": {
+    "development": [
+      "A",
+      "B"
+    ],
+    "holdout": [
+      "C"
+    ]
+  },
+  "documents": [
+    {
+      "document_id": "A01",
+      "case_id": "A",
+      "path": "inputs/case_A/A01.md",
+      "record_created": "2025-01-06",
+      "sha256": "5ded354671c794935f7a4ca5ccb685bd31a5bd4b755d056234ce41e1a86dc5cf"
+    },
+    {
+      "document_id": "A02",
+      "case_id": "A",
+      "path": "inputs/case_A/A02.md",
+      "record_created": "2025-01-13",
+      "sha256": "8db3dc5b24e8d02573b11a93785da5b8d2083df639819662632d56a33aeb1ab2"
+    },
+    {
+      "document_id": "A03",
+      "case_id": "A",
+      "path": "inputs/case_A/A03.md",
+      "record_created": "2025-01-20",
+      "sha256": "6f09ddfbd7bfa43f8ca4d0de0792e3672fe6533f9d6f0219af8aca3120b2ee58"
+    },
+    {
+      "document_id": "A04",
+      "case_id": "A",
+      "path": "inputs/case_A/A04.md",
+      "record_created": "2025-02-03",
+      "sha256": "3c4e191d34c467eb3f74895b033b1edb22d5bd0b4211dc4f39afb11345e2331e"
+    },
+    {
+      "document_id": "B01",
+      "case_id": "B",
+      "path": "inputs/case_B/B01.md",
+      "record_created": "2025-03-04",
+      "sha256": "c554e1fa877d948fe0cddc13b1bf3e09a418eb3a0be2c07cd3ccaf7534a21f5d"
+    },
+    {
+      "document_id": "B02",
+      "case_id": "B",
+      "path": "inputs/case_B/B02.md",
+      "record_created": "2025-03-05",
+      "sha256": "e0ad75564f84cd125d7e19c407973676439cbe3a2fd4bcc56b9eedb8777503d2"
+    },
+    {
+      "document_id": "B03",
+      "case_id": "B",
+      "path": "inputs/case_B/B03.md",
+      "record_created": "2025-03-11",
+      "sha256": "fedbd193e3d985d761d858b2d13e0381497aba6f07cc104a802aa5d9d1600c3d"
+    },
+    {
+      "document_id": "B04",
+      "case_id": "B",
+      "path": "inputs/case_B/B04.md",
+      "record_created": "2025-03-18",
+      "sha256": "586f3227eef13fb50bb8bd374d9bc033b5bd720fe71453b0164bbb9756d11ea5"
+    },
+    {
+      "document_id": "B05",
+      "case_id": "B",
+      "path": "inputs/case_B/B05.md",
+      "record_created": "2025-03-25",
+      "sha256": "f7d74bd6f371de204481b2f5080b206e46436f731b222afe5a7b1474779e88b4"
+    },
+    {
+      "document_id": "C01",
+      "case_id": "C",
+      "path": "inputs/case_C/C01.md",
+      "record_created": "2025-04-02",
+      "sha256": "f8e90115f55f5f17a3bc7937151381352605fc252ccd00b9294bf5348bf3b85f"
+    },
+    {
+      "document_id": "C02",
+      "case_id": "C",
+      "path": "inputs/case_C/C02.md",
+      "record_created": "2025-04-12",
+      "sha256": "f808f9e5674c5ce76665d8ba88feb32b1f51aa0bd88c02336c1addcc33478fc4"
+    },
+    {
+      "document_id": "C03",
+      "case_id": "C",
+      "path": "inputs/case_C/C03.md",
+      "record_created": "2025-04-15",
+      "sha256": "cc6d9659d94efaab50f0a1ddacab8fd72cfdf8e013a53ffbc8b22cd64dfab044"
+    },
+    {
+      "document_id": "C04",
+      "case_id": "C",
+      "path": "inputs/case_C/C04.md",
+      "record_created": "2025-04-17",
+      "sha256": "b827ab8ae4234efe90a76a537d5eeb539d10ab661f964b6fa2bc00724d7a68e1"
+    },
+    {
+      "document_id": "C05",
+      "case_id": "C",
+      "path": "inputs/case_C/C05.md",
+      "record_created": "2025-04-18",
+      "sha256": "d7e7d64ae7d6912eb0352f2bd294a92afbabe3f64df00c42fb7bcd7be1e4cc40"
+    }
+  ]
+}

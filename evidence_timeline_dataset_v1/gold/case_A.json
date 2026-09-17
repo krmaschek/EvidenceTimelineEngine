@@ -1,0 +1,239 @@
+{
+  "case_id": "A",
+  "events": [
+    {
+      "event_id": "A-E01",
+      "case_id": "A",
+      "event_type": "visit",
+      "description": "Initial in-person visit at Harbor Clinic for left wrist pain",
+      "status": "completed",
+      "date": "2025-01-06",
+      "date_precision": "day",
+      "date_interval": null,
+      "alternative_dates": [],
+      "needs_review": false,
+      "review_reasons": [],
+      "sources": [
+        {
+          "document_id": "A01",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "On 6 January 2025, patient A attended an in-person visit at Harbor Clinic for left wrist pain.",
+          "date_text": "6 January 2025"
+        }
+      ]
+    },
+    {
+      "event_id": "A-E02",
+      "case_id": "A",
+      "event_type": "procedure",
+      "description": "Left wrist X-ray at Harbor Clinic",
+      "status": "completed",
+      "date": "2025-01-06",
+      "date_precision": "day",
+      "date_interval": null,
+      "alternative_dates": [],
+      "needs_review": false,
+      "review_reasons": [],
+      "sources": [
+        {
+          "document_id": "A01",
+          "line_start": 9,
+          "line_end": 9,
+          "quote": "A left wrist X-ray was performed at Harbor Clinic on 6 January 2025.",
+          "date_text": "6 January 2025"
+        }
+      ]
+    },
+    {
+      "event_id": "A-E03",
+      "case_id": "A",
+      "event_type": "medication_start",
+      "description": "Paracetamol started",
+      "status": "completed",
+      "date": "2025-01-06",
+      "date_precision": "day",
+      "date_interval": null,
+      "alternative_dates": [],
+      "needs_review": false,
+      "review_reasons": [],
+      "sources": [
+        {
+          "document_id": "A01",
+          "line_start": 10,
+          "line_end": 10,
+          "quote": "Patient A began taking paracetamol on 6 January 2025.",
+          "date_text": "6 January 2025"
+        }
+      ]
+    },
+    {
+      "event_id": "A-E04",
+      "case_id": "A",
+      "event_type": "visit",
+      "description": "Follow-up visit at Harbor Clinic",
+      "status": "completed",
+      "date": "2025-01-13",
+      "date_precision": "day",
+      "date_interval": null,
+      "alternative_dates": [],
+      "needs_review": false,
+      "review_reasons": [],
+      "sources": [
+        {
+          "document_id": "A02",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "Patient A attended a follow-up visit at Harbor Clinic on 13 January 2025.",
+          "date_text": "13 January 2025"
+        }
+      ]
+    },
+    {
+      "event_id": "A-E05",
+      "case_id": "A",
+      "event_type": "procedure",
+      "description": "Left wrist ultrasound",
+      "status": "completed",
+      "date": "2025-01-13",
+      "date_precision": "day",
+      "date_interval": null,
+      "alternative_dates": [],
+      "needs_review": false,
+      "review_reasons": [],
+      "sources": [
+        {
+          "document_id": "A02",
+          "line_start": 9,
+          "line_end": 9,
+          "quote": "An ultrasound examination of the left wrist was performed on 13 January 2025.",
+          "date_text": "13 January 2025"
+        }
+      ]
+    },
+    {
+      "event_id": "A-E06",
+      "case_id": "A",
+      "event_type": "visit",
+      "description": "Assessment at Meadow Therapy",
+      "status": "completed",
+      "date": "2025-01-20",
+      "date_precision": "day",
+      "date_interval": null,
+      "alternative_dates": [],
+      "needs_review": false,
+      "review_reasons": [],
+      "sources": [
+        {
+          "document_id": "A03",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "Patient A attended an in-person assessment at Meadow Therapy on 20 January 2025.",
+          "date_text": "20 January 2025"
+        }
+      ]
+    },
+    {
+      "event_id": "A-E07",
+      "case_id": "A",
+      "event_type": "procedure",
+      "description": "Supervised left wrist exercise therapy session",
+      "status": "completed",
+      "date": "2025-01-20",
+      "date_precision": "day",
+      "date_interval": null,
+      "alternative_dates": [],
+      "needs_review": false,
+      "review_reasons": [],
+      "sources": [
+        {
+          "document_id": "A03",
+          "line_start": 9,
+          "line_end": 9,
+          "quote": "During that visit on 20 January 2025, a supervised left wrist exercise therapy session was completed.",
+          "date_text": "20 January 2025"
+        }
+      ]
+    },
+    {
+      "event_id": "A-E08",
+      "case_id": "A",
+      "event_type": "visit",
+      "description": "Follow-up visit at Harbor Clinic",
+      "status": "completed",
+      "date": "2025-02-03",
+      "date_precision": "day",
+      "date_interval": null,
+      "alternative_dates": [],
+      "needs_review": false,
+      "review_reasons": [],
+      "sources": [
+        {
+          "document_id": "A04",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "Patient A attended a follow-up visit at Harbor Clinic on 3 February 2025.",
+          "date_text": "3 February 2025"
+        }
+      ]
+    }
+  ],
+  "exclusions": [
+    {
+      "case_id": "A",
+      "reason": "Negated history, not a surgery event.",
+      "source": {
+        "document_id": "A01",
+        "line_start": 11,
+        "line_end": 11,
+        "quote": "The patient reported no previous wrist surgery.",
+        "date_text": null
+      }
+    },
+    {
+      "case_id": "A",
+      "reason": "Symptom update and explicit absence of additional procedures.",
+      "source": {
+        "document_id": "A02",
+        "line_start": 10,
+        "line_end": 10,
+        "quote": "Symptoms were improving. No additional procedure was performed during this visit.",
+        "date_text": null
+      }
+    },
+    {
+      "case_id": "A",
+      "reason": "General service information is outside the event scope.",
+      "source": {
+        "document_id": "A03",
+        "line_start": 10,
+        "line_end": 10,
+        "quote": "The patient was given general information about the service.",
+        "date_text": null
+      }
+    },
+    {
+      "case_id": "A",
+      "reason": "Conditional possibility, not a definite plan or performed procedure.",
+      "source": {
+        "document_id": "A04",
+        "line_start": 9,
+        "line_end": 9,
+        "quote": "The clinician discussed the possibility of further imaging if symptoms returned; no imaging was ordered or scheduled.",
+        "date_text": null
+      }
+    },
+    {
+      "case_id": "A",
+      "reason": "Explicit absence of new procedures and medication starts.",
+      "source": {
+        "document_id": "A04",
+        "line_start": 10,
+        "line_end": 10,
+        "quote": "No procedure was performed and no medication was started at this visit.",
+        "date_text": null
+      }
+    }
+  ],
+  "zero_event_documents": []
+}

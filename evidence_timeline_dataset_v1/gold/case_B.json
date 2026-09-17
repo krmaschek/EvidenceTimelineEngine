@@ -1,0 +1,241 @@
+{
+  "case_id": "B",
+  "events": [
+    {
+      "event_id": "B-E01",
+      "case_id": "B",
+      "event_type": "visit",
+      "description": "Initial visit at Birch Clinic for right ankle pain",
+      "status": "completed",
+      "date": "2025-03-04",
+      "date_precision": "day",
+      "date_interval": null,
+      "alternative_dates": [],
+      "needs_review": false,
+      "review_reasons": [],
+      "sources": [
+        {
+          "document_id": "B01",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "Patient B attended an initial visit at Birch Clinic on 4 March 2025 for right ankle pain.",
+          "date_text": "4 March 2025"
+        }
+      ]
+    },
+    {
+      "event_id": "B-E02",
+      "case_id": "B",
+      "event_type": "procedure",
+      "description": "Right ankle X-ray BX-41",
+      "status": "completed",
+      "date": "2025-03-04",
+      "date_precision": "day",
+      "date_interval": null,
+      "alternative_dates": [],
+      "needs_review": false,
+      "review_reasons": [],
+      "sources": [
+        {
+          "document_id": "B01",
+          "line_start": 9,
+          "line_end": 9,
+          "quote": "A right ankle X-ray was performed on 4 March 2025; imaging reference BX-41.",
+          "date_text": "4 March 2025"
+        },
+        {
+          "document_id": "B02",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "This report was issued on 5 March 2025 for the right ankle radiograph performed on 2025-03-04, imaging reference BX-41.",
+          "date_text": "2025-03-04"
+        },
+        {
+          "document_id": "B03",
+          "line_start": 9,
+          "line_end": 9,
+          "quote": "The prior right ankle X-ray, imaging reference BX-41, was performed on 4 March 2025.",
+          "date_text": "4 March 2025"
+        }
+      ]
+    },
+    {
+      "event_id": "B-E03",
+      "case_id": "B",
+      "event_type": "medication_start",
+      "description": "Paracetamol started",
+      "status": "completed",
+      "date": "2025-03-04",
+      "date_precision": "day",
+      "date_interval": null,
+      "alternative_dates": [],
+      "needs_review": false,
+      "review_reasons": [],
+      "sources": [
+        {
+          "document_id": "B01",
+          "line_start": 10,
+          "line_end": 10,
+          "quote": "Patient B started taking paracetamol on 4 March 2025.",
+          "date_text": "4 March 2025"
+        },
+        {
+          "document_id": "B03",
+          "line_start": 10,
+          "line_end": 10,
+          "quote": "Paracetamol had been started on 4 March 2025; this note does not record a new start.",
+          "date_text": "4 March 2025"
+        }
+      ]
+    },
+    {
+      "event_id": "B-E04",
+      "case_id": "B",
+      "event_type": "visit",
+      "description": "Follow-up visit at Birch Clinic",
+      "status": "completed",
+      "date": "2025-03-11",
+      "date_precision": "day",
+      "date_interval": null,
+      "alternative_dates": [],
+      "needs_review": false,
+      "review_reasons": [],
+      "sources": [
+        {
+          "document_id": "B03",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "Patient B attended a follow-up visit at Birch Clinic on 11 March 2025.",
+          "date_text": "11 March 2025"
+        },
+        {
+          "document_id": "B04",
+          "line_start": 10,
+          "line_end": 10,
+          "quote": "The referral history records a follow-up visit at Birch Clinic on 11 March 2025.",
+          "date_text": "11 March 2025"
+        }
+      ]
+    },
+    {
+      "event_id": "B-E05",
+      "case_id": "B",
+      "event_type": "procedure",
+      "description": "Right ankle ultrasound BU-12",
+      "status": "completed",
+      "date": "2025-03-11",
+      "date_precision": "day",
+      "date_interval": null,
+      "alternative_dates": [],
+      "needs_review": false,
+      "review_reasons": [],
+      "sources": [
+        {
+          "document_id": "B03",
+          "line_start": 11,
+          "line_end": 11,
+          "quote": "A right ankle ultrasound was performed on 11 March 2025; imaging reference BU-12.",
+          "date_text": "11 March 2025"
+        }
+      ]
+    },
+    {
+      "event_id": "B-E06",
+      "case_id": "B",
+      "event_type": "visit",
+      "description": "Assessment at Cedar Therapy",
+      "status": "completed",
+      "date": "2025-03-18",
+      "date_precision": "day",
+      "date_interval": null,
+      "alternative_dates": [],
+      "needs_review": false,
+      "review_reasons": [],
+      "sources": [
+        {
+          "document_id": "B04",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "Patient B attended an assessment visit at Cedar Therapy on 18 March 2025.",
+          "date_text": "18 March 2025"
+        }
+      ]
+    },
+    {
+      "event_id": "B-E07",
+      "case_id": "B",
+      "event_type": "procedure",
+      "description": "Supervised right ankle exercise therapy session BT-01",
+      "status": "completed",
+      "date": "2025-03-18",
+      "date_precision": "day",
+      "date_interval": null,
+      "alternative_dates": [],
+      "needs_review": false,
+      "review_reasons": [],
+      "sources": [
+        {
+          "document_id": "B04",
+          "line_start": 9,
+          "line_end": 9,
+          "quote": "A supervised right ankle exercise therapy session was completed on 18 March 2025, session reference BT-01.",
+          "date_text": "18 March 2025"
+        },
+        {
+          "document_id": "B05",
+          "line_start": 9,
+          "line_end": 9,
+          "quote": "The earlier supervised right ankle exercise therapy session, BT-01, took place on 18 March 2025.",
+          "date_text": "18 March 2025"
+        }
+      ]
+    },
+    {
+      "event_id": "B-E08",
+      "case_id": "B",
+      "event_type": "procedure",
+      "description": "Supervised right ankle exercise therapy session BT-02",
+      "status": "completed",
+      "date": "2025-03-25",
+      "date_precision": "day",
+      "date_interval": null,
+      "alternative_dates": [],
+      "needs_review": false,
+      "review_reasons": [],
+      "sources": [
+        {
+          "document_id": "B05",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "Patient B completed a second supervised right ankle exercise therapy session on 25 March 2025, session reference BT-02.",
+          "date_text": "25 March 2025"
+        }
+      ]
+    }
+  ],
+  "exclusions": [
+    {
+      "case_id": "B",
+      "reason": "Administrative clarification, not another examination.",
+      "source": {
+        "document_id": "B02",
+        "line_start": 9,
+        "line_end": 9,
+        "quote": "The report issue date is not a second examination date.",
+        "date_text": null
+      }
+    },
+    {
+      "case_id": "B",
+      "reason": "Explicitly rules out a separate assessment event; do not infer visits from procedures.",
+      "source": {
+        "document_id": "B05",
+        "line_start": 10,
+        "line_end": 10,
+        "quote": "No separate assessment or consultation was performed on 25 March 2025.",
+        "date_text": null
+      }
+    }
+  ],
+  "zero_event_documents": []
+}

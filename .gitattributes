@@ -1,0 +1,5 @@
+# Use LF line endings in the repository and in every checkout, on every OS.
+* text=auto eol=lf
+
+# The dataset is checked byte for byte against manifest.json: never change its line endings.
+evidence_timeline_dataset_v1/** -text

@@ -1,0 +1,26 @@
+{
+  "status": "passed",
+  "dataset_version": "1.0.0",
+  "documents": 14,
+  "events": 24,
+  "completed_events": 22,
+  "planned_events": 2,
+  "evidence_mentions": 31,
+  "events_with_multiple_sources": 6,
+  "explicit_exclusions": 12,
+  "accounted_narrative_lines": 43,
+  "conflicting_date_events": 1,
+  "approximate_date_events": 1,
+  "zero_event_documents": [
+    "C05"
+  ],
+  "checks": [
+    "input checksums and inventory",
+    "unique IDs and case isolation",
+    "exact quotes and line locations",
+    "complete narrative annotation coverage",
+    "date shapes and uncertainty flags",
+    "event counts, status and repeated-mention regression checks"
+  ],
+  "limitations": "Structural and annotation-consistency checks; not independent clinical validation or LLM extraction evaluation."
+}
