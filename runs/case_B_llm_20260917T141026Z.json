@@ -1,0 +1,301 @@
+{
+  "run_id": "500804e3519a42129438574e7269ca8f",
+  "created_at": "2026-09-17T14:10:26.276161Z",
+  "case_id": "B",
+  "status": "completed",
+  "notes": [
+    "PRELIMINARY timeline: duplicates are not merged and conflicts between documents are not detected yet, so the same event can appear more than once.",
+    "An empty citation_errors list means each quote was found at its cited lines. It does not mean the quote supports the event.",
+    "Events are sorted by their earliest possible date, then their latest possible date. Events without a date come last. Events with the same dates keep source order (document, line); that order says nothing about the time of day."
+  ],
+  "extractor": {
+    "kind": "llm",
+    "model": "google/gemini-3.8-flash",
+    "settings": {
+      "base_url": "https://openrouter.ai/api/v1",
+      "temperature": 0.0,
+      "max_output_tokens": 8000,
+      "timeout_seconds": 120.0,
+      "max_attempts": 3
+    }
+  },
+  "max_chars_per_batch": 20000,
+  "prompt_sha256": "3913912e753e9db20476e5bad270ab99537331081088c50a55b0c1662b5cdb12",
+  "document_sha256": {
+    "B01": "c554e1fa877d948fe0cddc13b1bf3e09a418eb3a0be2c07cd3ccaf7534a21f5d",
+    "B02": "e0ad75564f84cd125d7e19c407973676439cbe3a2fd4bcc56b9eedb8777503d2",
+    "B03": "fedbd193e3d985d761d858b2d13e0381497aba6f07cc104a802aa5d9d1600c3d",
+    "B04": "586f3227eef13fb50bb8bd374d9bc033b5bd720fe71453b0164bbb9756d11ea5",
+    "B05": "f7d74bd6f371de204481b2f5080b206e46436f731b222afe5a7b1474779e88b4"
+  },
+  "total_lines": 50,
+  "lines_in_successful_batches": 50,
+  "batches": [
+    {
+      "batch_id": "B-batch-001",
+      "lines": [
+        "B01:1-10",
+        "B02:1-9",
+        "B03:1-11",
+        "B04:1-10",
+        "B05:1-10"
+      ],
+      "status": "succeeded",
+      "attempts": 1,
+      "error": null,
+      "model": "google/gemini-3.8-flash",
+      "usage": {
+        "prompt_tokens": 2060,
+        "completion_tokens": 3607,
+        "total_tokens": 5667,
+        "cost": 0.01507125,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.01507125,
+          "upstream_inference_prompt_cost": 0.001545,
+          "upstream_inference_completions_cost": 0.01352625
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1793,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  ],
+  "events": [
+    {
+      "event_type": "visit",
+      "status": "completed",
+      "description": "Initial visit at Birch Clinic for right ankle pain",
+      "date": "2025-03-04",
+      "date_precision": "exact",
+      "date_earliest": null,
+      "date_latest": null,
+      "alternative_dates": [],
+      "evidence": [
+        {
+          "document_id": "B01",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "Patient B attended an initial visit at Birch Clinic on 4 March 2025 for right ankle pain.",
+          "date_text": "4 March 2025"
+        }
+      ],
+      "review_reasons": [],
+      "event_id": "B-batch-001-e01",
+      "batch_id": "B-batch-001",
+      "citation_errors": [],
+      "needs_review": false
+    },
+    {
+      "event_type": "procedure",
+      "status": "completed",
+      "description": "Right ankle X-ray, imaging reference BX-41",
+      "date": "2025-03-04",
+      "date_precision": "exact",
+      "date_earliest": null,
+      "date_latest": null,
+      "alternative_dates": [],
+      "evidence": [
+        {
+          "document_id": "B01",
+          "line_start": 9,
+          "line_end": 9,
+          "quote": "A right ankle X-ray was performed on 4 March 2025; imaging reference BX-41.",
+          "date_text": "4 March 2025"
+        },
+        {
+          "document_id": "B02",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "This report was issued on 5 March 2025 for the right ankle radiograph performed on 2025-03-04, imaging reference BX-41.",
+          "date_text": "2025-03-04"
+        },
+        {
+          "document_id": "B03",
+          "line_start": 9,
+          "line_end": 9,
+          "quote": "The prior right ankle X-ray, imaging reference BX-41, was performed on 4 March 2025.",
+          "date_text": "4 March 2025"
+        }
+      ],
+      "review_reasons": [],
+      "event_id": "B-batch-001-e02",
+      "batch_id": "B-batch-001",
+      "citation_errors": [],
+      "needs_review": false
+    },
+    {
+      "event_type": "medication_start",
+      "status": "completed",
+      "description": "Started paracetamol",
+      "date": "2025-03-04",
+      "date_precision": "exact",
+      "date_earliest": null,
+      "date_latest": null,
+      "alternative_dates": [],
+      "evidence": [
+        {
+          "document_id": "B01",
+          "line_start": 10,
+          "line_end": 10,
+          "quote": "Patient B started taking paracetamol on 4 March 2025.",
+          "date_text": "4 March 2025"
+        },
+        {
+          "document_id": "B03",
+          "line_start": 10,
+          "line_end": 10,
+          "quote": "Paracetamol had been started on 4 March 2025; this note does not record a new start.",
+          "date_text": "4 March 2025"
+        }
+      ],
+      "review_reasons": [],
+      "event_id": "B-batch-001-e03",
+      "batch_id": "B-batch-001",
+      "citation_errors": [],
+      "needs_review": false
+    },
+    {
+      "event_type": "visit",
+      "status": "completed",
+      "description": "Follow-up visit at Birch Clinic",
+      "date": "2025-03-11",
+      "date_precision": "exact",
+      "date_earliest": null,
+      "date_latest": null,
+      "alternative_dates": [],
+      "evidence": [
+        {
+          "document_id": "B03",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "Patient B attended a follow-up visit at Birch Clinic on 11 March 2025.",
+          "date_text": "11 March 2025"
+        },
+        {
+          "document_id": "B04",
+          "line_start": 10,
+          "line_end": 10,
+          "quote": "The referral history records a follow-up visit at Birch Clinic on 11 March 2025.",
+          "date_text": "11 March 2025"
+        }
+      ],
+      "review_reasons": [],
+      "event_id": "B-batch-001-e04",
+      "batch_id": "B-batch-001",
+      "citation_errors": [],
+      "needs_review": false
+    },
+    {
+      "event_type": "procedure",
+      "status": "completed",
+      "description": "Right ankle ultrasound, imaging reference BU-12",
+      "date": "2025-03-11",
+      "date_precision": "exact",
+      "date_earliest": null,
+      "date_latest": null,
+      "alternative_dates": [],
+      "evidence": [
+        {
+          "document_id": "B03",
+          "line_start": 11,
+          "line_end": 11,
+          "quote": "A right ankle ultrasound was performed on 11 March 2025; imaging reference BU-12.",
+          "date_text": "11 March 2025"
+        }
+      ],
+      "review_reasons": [],
+      "event_id": "B-batch-001-e05",
+      "batch_id": "B-batch-001",
+      "citation_errors": [],
+      "needs_review": false
+    },
+    {
+      "event_type": "visit",
+      "status": "completed",
+      "description": "Assessment visit at Cedar Therapy",
+      "date": "2025-03-18",
+      "date_precision": "exact",
+      "date_earliest": null,
+      "date_latest": null,
+      "alternative_dates": [],
+      "evidence": [
+        {
+          "document_id": "B04",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "Patient B attended an assessment visit at Cedar Therapy on 18 March 2025.",
+          "date_text": "18 March 2025"
+        }
+      ],
+      "review_reasons": [],
+      "event_id": "B-batch-001-e06",
+      "batch_id": "B-batch-001",
+      "citation_errors": [],
+      "needs_review": false
+    },
+    {
+      "event_type": "procedure",
+      "status": "completed",
+      "description": "Supervised right ankle exercise therapy session, session reference BT-01",
+      "date": "2025-03-18",
+      "date_precision": "exact",
+      "date_earliest": null,
+      "date_latest": null,
+      "alternative_dates": [],
+      "evidence": [
+        {
+          "document_id": "B04",
+          "line_start": 9,
+          "line_end": 9,
+          "quote": "A supervised right ankle exercise therapy session was completed on 18 March 2025, session reference BT-01.",
+          "date_text": "18 March 2025"
+        },
+        {
+          "document_id": "B05",
+          "line_start": 9,
+          "line_end": 9,
+          "quote": "The earlier supervised right ankle exercise therapy session, BT-01, took place on 18 March 2025.",
+          "date_text": "18 March 2025"
+        }
+      ],
+      "review_reasons": [],
+      "event_id": "B-batch-001-e07",
+      "batch_id": "B-batch-001",
+      "citation_errors": [],
+      "needs_review": false
+    },
+    {
+      "event_type": "procedure",
+      "status": "completed",
+      "description": "Supervised right ankle exercise therapy session, session reference BT-02",
+      "date": "2025-03-25",
+      "date_precision": "exact",
+      "date_earliest": null,
+      "date_latest": null,
+      "alternative_dates": [],
+      "evidence": [
+        {
+          "document_id": "B05",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "Patient B completed a second supervised right ankle exercise therapy session on 25 March 2025, session reference BT-02.",
+          "date_text": "25 March 2025"
+        }
+      ],
+      "review_reasons": [],
+      "event_id": "B-batch-001-e08",
+      "batch_id": "B-batch-001",
+      "citation_errors": [],
+      "needs_review": false
+    }
+  ]
+}

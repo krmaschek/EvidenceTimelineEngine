@@ -1,0 +1,17 @@
+Case A (run status: completed)
+  all events:       8 matched, 0 false positives, 0 missed, precision 100.0%, recall 100.0%
+  completed events: 8 matched, 0 false positives, 0 missed, precision 100.0%, recall 100.0%
+  no-match reasons: none
+  missed references: none
+  citation check (not part of the scores): 0 of 8 quotes failed
+
+Case B (run status: completed)
+  all events:       8 matched, 0 false positives, 0 missed, precision 100.0%, recall 100.0%
+  completed events: 8 matched, 0 false positives, 0 missed, precision 100.0%, recall 100.0%
+  no-match reasons: none
+  missed references: none
+  citation check (not part of the scores): 0 of 13 quotes failed
+
+All cases together
+  all events:       16 matched, 0 false positives, 0 missed, precision 100.0%, recall 100.0%
+  completed events: 16 matched, 0 false positives, 0 missed, precision 100.0%, recall 100.0%

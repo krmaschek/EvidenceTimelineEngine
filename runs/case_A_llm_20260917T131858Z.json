@@ -1,0 +1,264 @@
+{
+  "run_id": "231e4cdb14564b71a2141ca58df87729",
+  "created_at": "2026-09-17T13:18:58.358675Z",
+  "case_id": "A",
+  "status": "completed",
+  "notes": [
+    "PRELIMINARY timeline: duplicates are not merged and conflicts between documents are not detected yet, so the same event can appear more than once.",
+    "An empty citation_errors list means each quote was found at its cited lines. It does not mean the quote supports the event.",
+    "Events are sorted by their earliest possible date, then their latest possible date. Events without a date come last. Events with the same dates keep source order (document, line); that order says nothing about the time of day."
+  ],
+  "extractor": {
+    "kind": "llm",
+    "model": "google/gemini-3.8-flash",
+    "settings": {
+      "base_url": "https://openrouter.ai/api/v1",
+      "temperature": 0.0,
+      "max_output_tokens": 8000,
+      "timeout_seconds": 120.0,
+      "max_attempts": 3
+    }
+  },
+  "max_chars_per_batch": 20000,
+  "prompt_sha256": "3913912e753e9db20476e5bad270ab99537331081088c50a55b0c1662b5cdb12",
+  "document_sha256": {
+    "A01": "5ded354671c794935f7a4ca5ccb685bd31a5bd4b755d056234ce41e1a86dc5cf",
+    "A02": "8db3dc5b24e8d02573b11a93785da5b8d2083df639819662632d56a33aeb1ab2",
+    "A03": "6f09ddfbd7bfa43f8ca4d0de0792e3672fe6533f9d6f0219af8aca3120b2ee58",
+    "A04": "3c4e191d34c467eb3f74895b033b1edb22d5bd0b4211dc4f39afb11345e2331e"
+  },
+  "total_lines": 41,
+  "lines_in_successful_batches": 41,
+  "batches": [
+    {
+      "batch_id": "A-batch-001",
+      "lines": [
+        "A01:1-11",
+        "A02:1-10",
+        "A03:1-10",
+        "A04:1-10"
+      ],
+      "status": "succeeded",
+      "attempts": 1,
+      "error": null,
+      "model": "google/gemini-3.8-flash",
+      "usage": {
+        "prompt_tokens": 1789,
+        "completion_tokens": 2687,
+        "total_tokens": 4476,
+        "cost": 0.011418,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.011418,
+          "upstream_inference_prompt_cost": 0.00134175,
+          "upstream_inference_completions_cost": 0.01007625
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 2003,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  ],
+  "events": [
+    {
+      "event_type": "visit",
+      "status": "completed",
+      "description": "In-person visit at Harbor Clinic for left wrist pain",
+      "date": "2025-01-06",
+      "date_precision": "exact",
+      "date_earliest": null,
+      "date_latest": null,
+      "alternative_dates": [],
+      "evidence": [
+        {
+          "document_id": "A01",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "On 6 January 2025, patient A attended an in-person visit at Harbor Clinic for left wrist pain.",
+          "date_text": "6 January 2025"
+        }
+      ],
+      "review_reasons": [],
+      "event_id": "A-batch-001-e01",
+      "batch_id": "A-batch-001",
+      "citation_errors": [],
+      "needs_review": false
+    },
+    {
+      "event_type": "procedure",
+      "status": "completed",
+      "description": "Left wrist X-ray at Harbor Clinic",
+      "date": "2025-01-06",
+      "date_precision": "exact",
+      "date_earliest": null,
+      "date_latest": null,
+      "alternative_dates": [],
+      "evidence": [
+        {
+          "document_id": "A01",
+          "line_start": 9,
+          "line_end": 9,
+          "quote": "A left wrist X-ray was performed at Harbor Clinic on 6 January 2025.",
+          "date_text": "6 January 2025"
+        }
+      ],
+      "review_reasons": [],
+      "event_id": "A-batch-001-e02",
+      "batch_id": "A-batch-001",
+      "citation_errors": [],
+      "needs_review": false
+    },
+    {
+      "event_type": "medication_start",
+      "status": "completed",
+      "description": "Began taking paracetamol",
+      "date": "2025-01-06",
+      "date_precision": "exact",
+      "date_earliest": null,
+      "date_latest": null,
+      "alternative_dates": [],
+      "evidence": [
+        {
+          "document_id": "A01",
+          "line_start": 10,
+          "line_end": 10,
+          "quote": "Patient A began taking paracetamol on 6 January 2025.",
+          "date_text": "6 January 2025"
+        }
+      ],
+      "review_reasons": [],
+      "event_id": "A-batch-001-e03",
+      "batch_id": "A-batch-001",
+      "citation_errors": [],
+      "needs_review": false
+    },
+    {
+      "event_type": "visit",
+      "status": "completed",
+      "description": "Follow-up visit at Harbor Clinic",
+      "date": "2025-01-13",
+      "date_precision": "exact",
+      "date_earliest": null,
+      "date_latest": null,
+      "alternative_dates": [],
+      "evidence": [
+        {
+          "document_id": "A02",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "Patient A attended a follow-up visit at Harbor Clinic on 13 January 2025.",
+          "date_text": "13 January 2025"
+        }
+      ],
+      "review_reasons": [],
+      "event_id": "A-batch-001-e04",
+      "batch_id": "A-batch-001",
+      "citation_errors": [],
+      "needs_review": false
+    },
+    {
+      "event_type": "procedure",
+      "status": "completed",
+      "description": "Ultrasound examination of the left wrist",
+      "date": "2025-01-13",
+      "date_precision": "exact",
+      "date_earliest": null,
+      "date_latest": null,
+      "alternative_dates": [],
+      "evidence": [
+        {
+          "document_id": "A02",
+          "line_start": 9,
+          "line_end": 9,
+          "quote": "An ultrasound examination of the left wrist was performed on 13 January 2025.",
+          "date_text": "13 January 2025"
+        }
+      ],
+      "review_reasons": [],
+      "event_id": "A-batch-001-e05",
+      "batch_id": "A-batch-001",
+      "citation_errors": [],
+      "needs_review": false
+    },
+    {
+      "event_type": "visit",
+      "status": "completed",
+      "description": "In-person assessment at Meadow Therapy",
+      "date": "2025-01-20",
+      "date_precision": "exact",
+      "date_earliest": null,
+      "date_latest": null,
+      "alternative_dates": [],
+      "evidence": [
+        {
+          "document_id": "A03",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "Patient A attended an in-person assessment at Meadow Therapy on 20 January 2025.",
+          "date_text": "20 January 2025"
+        }
+      ],
+      "review_reasons": [],
+      "event_id": "A-batch-001-e06",
+      "batch_id": "A-batch-001",
+      "citation_errors": [],
+      "needs_review": false
+    },
+    {
+      "event_type": "procedure",
+      "status": "completed",
+      "description": "Supervised left wrist exercise therapy session",
+      "date": "2025-01-20",
+      "date_precision": "exact",
+      "date_earliest": null,
+      "date_latest": null,
+      "alternative_dates": [],
+      "evidence": [
+        {
+          "document_id": "A03",
+          "line_start": 9,
+          "line_end": 9,
+          "quote": "During that visit on 20 January 2025, a supervised left wrist exercise therapy session was completed.",
+          "date_text": "20 January 2025"
+        }
+      ],
+      "review_reasons": [],
+      "event_id": "A-batch-001-e07",
+      "batch_id": "A-batch-001",
+      "citation_errors": [],
+      "needs_review": false
+    },
+    {
+      "event_type": "visit",
+      "status": "completed",
+      "description": "Follow-up visit at Harbor Clinic",
+      "date": "2025-02-03",
+      "date_precision": "exact",
+      "date_earliest": null,
+      "date_latest": null,
+      "alternative_dates": [],
+      "evidence": [
+        {
+          "document_id": "A04",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "Patient A attended a follow-up visit at Harbor Clinic on 3 February 2025.",
+          "date_text": "3 February 2025"
+        }
+      ],
+      "review_reasons": [],
+      "event_id": "A-batch-001-e08",
+      "batch_id": "A-batch-001",
+      "citation_errors": [],
+      "needs_review": false
+    }
+  ]
+}

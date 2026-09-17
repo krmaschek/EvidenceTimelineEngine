@@ -1,0 +1,73 @@
+{
+  "case_id": "A",
+  "run_id": "231e4cdb14564b71a2141ca58df87729",
+  "reviewer": "Claude (review delegated by Krystof; each match checked on type, status, date, cited lines and meaning)",
+  "reference_events": [
+    "A-E01 | visit | completed | 2025-01-06 | Initial in-person visit at Harbor Clinic for left wrist pain",
+    "A-E02 | procedure | completed | 2025-01-06 | Left wrist X-ray at Harbor Clinic",
+    "A-E03 | medication_start | completed | 2025-01-06 | Paracetamol started",
+    "A-E04 | visit | completed | 2025-01-13 | Follow-up visit at Harbor Clinic",
+    "A-E05 | procedure | completed | 2025-01-13 | Left wrist ultrasound",
+    "A-E06 | visit | completed | 2025-01-20 | Assessment at Meadow Therapy",
+    "A-E07 | procedure | completed | 2025-01-20 | Supervised left wrist exercise therapy session",
+    "A-E08 | visit | completed | 2025-02-03 | Follow-up visit at Harbor Clinic"
+  ],
+  "decisions": [
+    {
+      "prediction_id": "A-batch-001-e01",
+      "prediction": "visit | completed | 2025-01-06 | In-person visit at Harbor Clinic for left wrist pain",
+      "match": "A-E01",
+      "reason": null,
+      "note": "A01:8. Same visit; 'initial' is only omitted from the wording."
+    },
+    {
+      "prediction_id": "A-batch-001-e02",
+      "prediction": "procedure | completed | 2025-01-06 | Left wrist X-ray at Harbor Clinic",
+      "match": "A-E02",
+      "reason": null,
+      "note": "A01:9. Same procedure and body site."
+    },
+    {
+      "prediction_id": "A-batch-001-e03",
+      "prediction": "medication_start | completed | 2025-01-06 | Began taking paracetamol",
+      "match": "A-E03",
+      "reason": null,
+      "note": "A01:10. Same medication start."
+    },
+    {
+      "prediction_id": "A-batch-001-e04",
+      "prediction": "visit | completed | 2025-01-13 | Follow-up visit at Harbor Clinic",
+      "match": "A-E04",
+      "reason": null,
+      "note": "A02:8. Harbor Clinic follow-up on 13 Jan (A-E08 is the 3 Feb one)."
+    },
+    {
+      "prediction_id": "A-batch-001-e05",
+      "prediction": "procedure | completed | 2025-01-13 | Ultrasound examination of the left wrist",
+      "match": "A-E05",
+      "reason": null,
+      "note": "A02:9. Same procedure (ultrasound) and body site (left wrist)."
+    },
+    {
+      "prediction_id": "A-batch-001-e06",
+      "prediction": "visit | completed | 2025-01-20 | In-person assessment at Meadow Therapy",
+      "match": "A-E06",
+      "reason": null,
+      "note": "A03:8. Same assessment, typed as a visit."
+    },
+    {
+      "prediction_id": "A-batch-001-e07",
+      "prediction": "procedure | completed | 2025-01-20 | Supervised left wrist exercise therapy session",
+      "match": "A-E07",
+      "reason": null,
+      "note": "A03:9. Same therapy session; separate from the A03:8 assessment on the same day."
+    },
+    {
+      "prediction_id": "A-batch-001-e08",
+      "prediction": "visit | completed | 2025-02-03 | Follow-up visit at Harbor Clinic",
+      "match": "A-E08",
+      "reason": null,
+      "note": "A04:8. Harbor Clinic follow-up on 3 Feb."
+    }
+  ]
+}
