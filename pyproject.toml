@@ -1,0 +1,25 @@
+[project]
+name = "evidence-timeline"
+version = "0.1.0"
+description = "Phase 1 of Evidence Timeline Engine: batched, source-validated LLM event extraction from Markdown documents."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.28.1",
+    "pydantic>=2.13.5",
+]
+
+[project.scripts]
+evidence-timeline = "evidence_timeline.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.11.21,<0.12"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]

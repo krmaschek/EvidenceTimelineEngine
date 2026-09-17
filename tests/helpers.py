@@ -1,0 +1,87 @@
+"""Small builders shared by the tests."""
+
+import datetime as dt
+import uuid
+from pathlib import Path
+from typing import Any
+
+from evidence_timeline.models import (
+    Batch,
+    DocumentSpan,
+    EvidenceQuote,
+    ExtractedEvent,
+    ExtractorInfo,
+    TimelineEvent,
+    TimelineRun,
+)
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+DATASET_DIR = REPO_ROOT / "evidence_timeline_dataset_v1"
+CASE_A_DIR = DATASET_DIR / "inputs" / "case_A"
+CASE_B_DIR = DATASET_DIR / "inputs" / "case_B"
+GOLD_DIR = DATASET_DIR / "gold"
+
+APPROXIMATE_MARCH = {
+    "date": None,
+    "date_precision": "approximate",
+    "date_earliest": dt.date(2025, 3, 1),
+    "date_latest": dt.date(2025, 3, 31),
+}
+CONFLICTING_MARCH = {
+    "date": None,
+    "date_precision": "conflicting",
+    "alternative_dates": [dt.date(2025, 3, 12), dt.date(2025, 3, 10)],
+}
+NO_DATE = {"date": None, "date_precision": "unknown"}
+
+
+def make_batch(lines: list[str]) -> Batch:
+    return Batch(batch_id="X-batch-001", spans=[DocumentSpan(document_id="D01", first_line=1, lines=lines)])
+
+
+def make_quote(
+    line: int = 1, quote: str = "text", document_id: str = "D01", date_text: str | None = None
+) -> EvidenceQuote:
+    return EvidenceQuote(document_id=document_id, line_start=line, line_end=line, quote=quote, date_text=date_text)
+
+
+def make_event(**changes: Any) -> ExtractedEvent:
+    fields: dict[str, Any] = {
+        "event_type": "visit",
+        "status": "completed",
+        "description": "Visit",
+        "date": dt.date(2025, 1, 6),
+        "date_precision": "exact",
+        "date_earliest": None,
+        "date_latest": None,
+        "alternative_dates": [],
+        "evidence": [make_quote()],
+        "review_reasons": [],
+    }
+    fields.update(changes)
+    return ExtractedEvent(**fields)
+
+
+def make_timeline_event(event_id: str, **changes: Any) -> TimelineEvent:
+    event = make_event(**changes)
+    return TimelineEvent(
+        **event.model_dump(), event_id=event_id, batch_id="X-batch-001", citation_errors=[], needs_review=False
+    )
+
+
+def make_run(events: list[TimelineEvent], kind: Any = "llm", status: Any = "completed") -> TimelineRun:
+    return TimelineRun(
+        run_id=uuid.uuid4().hex,
+        created_at=dt.datetime.now(dt.UTC),
+        case_id="R",
+        status=status,
+        notes=[],
+        extractor=ExtractorInfo(kind=kind, model=None, settings={}),
+        max_chars_per_batch=20_000,
+        prompt_sha256="",
+        document_sha256={},
+        total_lines=0,
+        lines_in_successful_batches=0,
+        batches=[],
+        events=events,
+    )

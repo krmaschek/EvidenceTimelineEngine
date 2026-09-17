@@ -1,0 +1,17 @@
+# Python / uv
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+*.egg-info/
+build/
+dist/
+
+# Credentials: real keys never go into version control
+.env
+.env.*
+!.env.example
+
+# Fake-extractor runs are throwaway pipeline tests. Real-model runs in runs/ are worth keeping.
+runs/case_*_fake_*.json
