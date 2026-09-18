@@ -1,0 +1,289 @@
+{
+  "run_id": "b7c15338f0cb4ca3a1887424bf1eb736",
+  "created_at": "2026-09-17T14:25:29.742879Z",
+  "case_id": "C",
+  "status": "completed",
+  "notes": [
+    "PRELIMINARY timeline: duplicates are not merged and conflicts between documents are not detected yet, so the same event can appear more than once.",
+    "An empty citation_errors list means each quote was found at its cited lines. It does not mean the quote supports the event.",
+    "Events are sorted by their earliest possible date, then their latest possible date. Events without a date come last. Events with the same dates keep source order (document, line); that order says nothing about the time of day."
+  ],
+  "extractor": {
+    "kind": "llm",
+    "model": "google/gemini-3.8-flash",
+    "settings": {
+      "base_url": "https://openrouter.ai/api/v1",
+      "temperature": 0.0,
+      "max_output_tokens": 8000,
+      "timeout_seconds": 120.0,
+      "max_attempts": 3
+    }
+  },
+  "max_chars_per_batch": 20000,
+  "prompt_sha256": "3913912e753e9db20476e5bad270ab99537331081088c50a55b0c1662b5cdb12",
+  "document_sha256": {
+    "C01": "f8e90115f55f5f17a3bc7937151381352605fc252ccd00b9294bf5348bf3b85f",
+    "C02": "f808f9e5674c5ce76665d8ba88feb32b1f51aa0bd88c02336c1addcc33478fc4",
+    "C03": "cc6d9659d94efaab50f0a1ddacab8fd72cfdf8e013a53ffbc8b22cd64dfab044",
+    "C04": "b827ab8ae4234efe90a76a537d5eeb539d10ab661f964b6fa2bc00724d7a68e1",
+    "C05": "d7e7d64ae7d6912eb0352f2bd294a92afbabe3f64df00c42fb7bcd7be1e4cc40"
+  },
+  "total_lines": 50,
+  "lines_in_successful_batches": 50,
+  "batches": [
+    {
+      "batch_id": "C-batch-001",
+      "lines": [
+        "C01:1-11",
+        "C02:1-10",
+        "C03:1-9",
+        "C04:1-11",
+        "C05:1-9"
+      ],
+      "status": "succeeded",
+      "attempts": 1,
+      "error": null,
+      "model": "google/gemini-3.8-flash",
+      "usage": {
+        "prompt_tokens": 2078,
+        "completion_tokens": 2832,
+        "total_tokens": 4910,
+        "cost": 0.0121785,
+        "is_byok": false,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0,
+          "video_tokens": 0
+        },
+        "cost_details": {
+          "upstream_inference_cost": 0.0121785,
+          "upstream_inference_prompt_cost": 0.0015585,
+          "upstream_inference_completions_cost": 0.01062
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 1323,
+          "image_tokens": 0,
+          "audio_tokens": 0
+        }
+      }
+    }
+  ],
+  "events": [
+    {
+      "event_type": "procedure",
+      "status": "completed",
+      "description": "Supervised left shoulder exercise therapy session CT-01 at Willow Therapy",
+      "date": null,
+      "date_precision": "approximate",
+      "date_earliest": "2025-03-01",
+      "date_latest": "2025-03-31",
+      "alternative_dates": [],
+      "evidence": [
+        {
+          "document_id": "C02",
+          "line_start": 9,
+          "line_end": 9,
+          "quote": "The patient reports that the first supervised left shoulder exercise therapy session, session CT-01 at Willow Therapy, took place sometime in March 2025; the exact day is unknown.",
+          "date_text": "March 2025"
+        }
+      ],
+      "review_reasons": [
+        "approximate date",
+        "patient report without independent clinical verification"
+      ],
+      "event_id": "C-batch-001-e01",
+      "batch_id": "C-batch-001",
+      "citation_errors": [],
+      "needs_review": true
+    },
+    {
+      "event_type": "visit",
+      "status": "completed",
+      "description": "In-person visit at Elm Clinic for left shoulder pain",
+      "date": "2025-04-02",
+      "date_precision": "exact",
+      "date_earliest": null,
+      "date_latest": null,
+      "alternative_dates": [],
+      "evidence": [
+        {
+          "document_id": "C01",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "Patient C attended an in-person visit at Elm Clinic on 2 April 2025 for left shoulder pain.",
+          "date_text": "2 April 2025"
+        }
+      ],
+      "review_reasons": [],
+      "event_id": "C-batch-001-e02",
+      "batch_id": "C-batch-001",
+      "citation_errors": [],
+      "needs_review": false
+    },
+    {
+      "event_type": "medication_start",
+      "status": "completed",
+      "description": "Started taking paracetamol",
+      "date": "2025-04-02",
+      "date_precision": "exact",
+      "date_earliest": null,
+      "date_latest": null,
+      "alternative_dates": [],
+      "evidence": [
+        {
+          "document_id": "C01",
+          "line_start": 9,
+          "line_end": 9,
+          "quote": "Patient C started taking paracetamol on 2 April 2025.",
+          "date_text": "2 April 2025"
+        }
+      ],
+      "review_reasons": [],
+      "event_id": "C-batch-001-e03",
+      "batch_id": "C-batch-001",
+      "citation_errors": [],
+      "needs_review": false
+    },
+    {
+      "event_type": "visit",
+      "status": "completed",
+      "description": "Assessment visit at Willow Therapy",
+      "date": "2025-04-12",
+      "date_precision": "exact",
+      "date_earliest": null,
+      "date_latest": null,
+      "alternative_dates": [],
+      "evidence": [
+        {
+          "document_id": "C02",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "Patient C attended an assessment visit at Willow Therapy on 12 April 2025.",
+          "date_text": "12 April 2025"
+        }
+      ],
+      "review_reasons": [],
+      "event_id": "C-batch-001-e04",
+      "batch_id": "C-batch-001",
+      "citation_errors": [],
+      "needs_review": false
+    },
+    {
+      "event_type": "procedure",
+      "status": "completed",
+      "description": "Left shoulder ultrasound, reference CU-77",
+      "date": null,
+      "date_precision": "conflicting",
+      "date_earliest": null,
+      "date_latest": null,
+      "alternative_dates": [
+        "2025-04-14",
+        "2025-04-15"
+      ],
+      "evidence": [
+        {
+          "document_id": "C03",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "A left shoulder ultrasound for patient C, imaging reference CU-77, is recorded as performed on 14 April 2025.",
+          "date_text": "14 April 2025"
+        },
+        {
+          "document_id": "C04",
+          "line_start": 9,
+          "line_end": 9,
+          "quote": "The imaging log lists the same left shoulder ultrasound, reference CU-77, as performed on 15 April 2025. This conflicts with the imaging report; neither date has been verified.",
+          "date_text": "15 April 2025"
+        }
+      ],
+      "review_reasons": [
+        "conflicting dates",
+        "conflicting dates between sources"
+      ],
+      "event_id": "C-batch-001-e05",
+      "batch_id": "C-batch-001",
+      "citation_errors": [],
+      "needs_review": true
+    },
+    {
+      "event_type": "visit",
+      "status": "completed",
+      "description": "Follow-up visit at Elm Clinic",
+      "date": "2025-04-17",
+      "date_precision": "exact",
+      "date_earliest": null,
+      "date_latest": null,
+      "alternative_dates": [],
+      "evidence": [
+        {
+          "document_id": "C04",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "Patient C attended a follow-up visit at Elm Clinic on 17 April 2025.",
+          "date_text": "17 April 2025"
+        }
+      ],
+      "review_reasons": [],
+      "event_id": "C-batch-001-e06",
+      "batch_id": "C-batch-001",
+      "citation_errors": [],
+      "needs_review": false
+    },
+    {
+      "event_type": "procedure",
+      "status": "planned",
+      "description": "Scheduled left shoulder X-ray, reference CX-18",
+      "date": "2025-04-18",
+      "date_precision": "exact",
+      "date_earliest": null,
+      "date_latest": null,
+      "alternative_dates": [],
+      "evidence": [
+        {
+          "document_id": "C04",
+          "line_start": 10,
+          "line_end": 10,
+          "quote": "A left shoulder X-ray, reference CX-18, is scheduled for 18 April 2025 and has not yet been performed.",
+          "date_text": "18 April 2025"
+        }
+      ],
+      "review_reasons": [],
+      "event_id": "C-batch-001-e07",
+      "batch_id": "C-batch-001",
+      "citation_errors": [],
+      "needs_review": false
+    },
+    {
+      "event_type": "procedure",
+      "status": "planned",
+      "description": "Scheduled left shoulder MRI, booking CM-20",
+      "date": "2025-04-20",
+      "date_precision": "exact",
+      "date_earliest": null,
+      "date_latest": null,
+      "alternative_dates": [],
+      "evidence": [
+        {
+          "document_id": "C01",
+          "line_start": 10,
+          "line_end": 10,
+          "quote": "A left shoulder MRI, booking CM-20, is scheduled for 20 April 2025. It has not yet been performed.",
+          "date_text": "20 April 2025"
+        },
+        {
+          "document_id": "C04",
+          "line_start": 11,
+          "line_end": 11,
+          "quote": "The MRI booking CM-20 remains scheduled for 20 April 2025 and has not yet been performed.",
+          "date_text": "20 April 2025"
+        }
+      ],
+      "review_reasons": [],
+      "event_id": "C-batch-001-e08",
+      "batch_id": "C-batch-001",
+      "citation_errors": [],
+      "needs_review": false
+    }
+  ]
+}

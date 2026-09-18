@@ -1,0 +1,73 @@
+{
+  "case_id": "C",
+  "run_id": "b7c15338f0cb4ca3a1887424bf1eb736",
+  "reviewer": "Claude (review delegated by Krystof; each match checked on type, status, date, cited lines and meaning)",
+  "reference_events": [
+    "C-E01 | visit | completed | 2025-04-02 | In-person visit at Elm Clinic for left shoulder pain",
+    "C-E02 | medication_start | completed | 2025-04-02 | Paracetamol started",
+    "C-E03 | procedure | planned | 2025-04-20 | Scheduled left shoulder MRI CM-20",
+    "C-E04 | visit | completed | 2025-04-12 | Assessment at Willow Therapy",
+    "C-E05 | procedure | completed | between 2025-03-01 and 2025-03-31 | First supervised left shoulder exercise therapy session CT-01",
+    "C-E06 | procedure | completed | conflicting: 2025-04-14 / 2025-04-15 | Left shoulder ultrasound CU-77",
+    "C-E07 | visit | completed | 2025-04-17 | Follow-up visit at Elm Clinic",
+    "C-E08 | procedure | planned | 2025-04-18 | Scheduled left shoulder X-ray CX-18"
+  ],
+  "decisions": [
+    {
+      "prediction_id": "C-batch-001-e01",
+      "prediction": "procedure | completed | between 2025-03-01 and 2025-03-31 | Supervised left shoulder exercise therapy session CT-01 at Willow Therapy",
+      "match": "C-E05",
+      "reason": null,
+      "note": "C02:9. Therapy session CT-01, approximate 2025-03-01..2025-03-31 with no invented day, flagged for review. date_text is 'March 2025' where the key has 'sometime in March 2025'; the quote is identical."
+    },
+    {
+      "prediction_id": "C-batch-001-e02",
+      "prediction": "visit | completed | 2025-04-02 | In-person visit at Elm Clinic for left shoulder pain",
+      "match": "C-E01",
+      "reason": null,
+      "note": "C01:8. Same visit at Elm Clinic on 2 Apr."
+    },
+    {
+      "prediction_id": "C-batch-001-e03",
+      "prediction": "medication_start | completed | 2025-04-02 | Started taking paracetamol",
+      "match": "C-E02",
+      "reason": null,
+      "note": "C01:9. Same paracetamol start."
+    },
+    {
+      "prediction_id": "C-batch-001-e04",
+      "prediction": "visit | completed | 2025-04-12 | Assessment visit at Willow Therapy",
+      "match": "C-E04",
+      "reason": null,
+      "note": "C02:8. Same assessment at Willow Therapy on 12 Apr."
+    },
+    {
+      "prediction_id": "C-batch-001-e05",
+      "prediction": "procedure | completed | conflicting: 2025-04-14 / 2025-04-15 | Left shoulder ultrasound, reference CU-77",
+      "match": "C-E06",
+      "reason": null,
+      "note": "C03:8, C04:9. Ultrasound CU-77 kept as a conflict (14 and 15 Apr) with both sources, flagged for review."
+    },
+    {
+      "prediction_id": "C-batch-001-e06",
+      "prediction": "visit | completed | 2025-04-17 | Follow-up visit at Elm Clinic",
+      "match": "C-E07",
+      "reason": null,
+      "note": "C04:8. Same follow-up visit on 17 Apr."
+    },
+    {
+      "prediction_id": "C-batch-001-e07",
+      "prediction": "procedure | planned | 2025-04-18 | Scheduled left shoulder X-ray, reference CX-18",
+      "match": "C-E08",
+      "reason": null,
+      "note": "C04:10. X-ray CX-18 correctly planned, not completed."
+    },
+    {
+      "prediction_id": "C-batch-001-e08",
+      "prediction": "procedure | planned | 2025-04-20 | Scheduled left shoulder MRI, booking CM-20",
+      "match": "C-E03",
+      "reason": null,
+      "note": "C01:10, C04:11. MRI CM-20 correctly planned, with both mentions."
+    }
+  ]
+}
