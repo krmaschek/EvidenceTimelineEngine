@@ -29,7 +29,7 @@ class ExtractionResult(BaseModel):
 class EventExtractor(Protocol):
     info: ExtractorInfo  # stored with the run
 
-    def extract(self, batch: Batch) -> ExtractionResult: ...
+    async def extract_events(self, batch: Batch) -> ExtractionResult: ...
 
 
 class FakeExtractor:
@@ -42,7 +42,7 @@ class FakeExtractor:
 
     info = ExtractorInfo(kind="fake", model=None, settings={})
 
-    def extract(self, batch: Batch) -> ExtractionResult:
+    async def extract_events(self, batch: Batch) -> ExtractionResult:
         events = []
         for span in batch.spans:
             for line_number, text in span.numbered_lines():

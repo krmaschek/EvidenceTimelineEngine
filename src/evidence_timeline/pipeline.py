@@ -1,10 +1,11 @@
-"""Phase 1 pipeline for one case: documents -> batches -> LLM -> checks -> sorted timeline.
+"""Pipeline for one case: documents -> batches -> LLM -> checks -> sorted timeline.
 
-Batches are processed one after another. A failed batch is recorded and the
-others still run, but the run is then marked "partial" (or "failed"), never
-"completed".
+All batches are started together; the extractor limits how many LLM calls run
+at the same time. A failed batch is recorded and the others still finish, but
+the run is then marked "partial" (or "failed"), never "completed".
 """
 
+import asyncio
 import datetime as dt
 import uuid
 from pathlib import Path
@@ -13,7 +14,7 @@ from typing import Literal
 from evidence_timeline.batching import build_batches, check_coverage
 from evidence_timeline.documents import load_documents
 from evidence_timeline.extractors import EventExtractor, ExtractionError
-from evidence_timeline.models import BatchReport, TimelineEvent, TimelineRun
+from evidence_timeline.models import Batch, BatchReport, TimelineEvent, TimelineRun
 from evidence_timeline.prompts import PROMPT_SHA256
 from evidence_timeline.timeline import ORDERING_NOTE, build_timeline_events, sort_timeline
 
@@ -26,50 +27,31 @@ NOTES = [
 ]
 
 
-def run_case(case_dir: Path, extractor: EventExtractor, max_chars: int) -> TimelineRun:
+async def run_case(case_dir: Path, extractor: EventExtractor, max_chars: int) -> TimelineRun:
     case_id = case_dir.name.removeprefix("case_")
     documents = load_documents(case_dir)
     batches = build_batches(case_id, documents, max_chars)
     check_coverage(documents, batches)
 
-    reports = []
+    # gather() returns the results in the same order as the batches.
+    coroutines = [process_batch(batch, extractor) for batch in batches]
+    results = await asyncio.gather(*coroutines)
+
+    reports: list[BatchReport] = []
     events: list[TimelineEvent] = []
-    lines_in_successful_batches = 0
-    for batch in batches:
-        lines = [f"{span.document_id}:{span.first_line}-{span.last_line}" for span in batch.spans]
-        try:
-            result = extractor.extract(batch)
-        except ExtractionError as error:
-            # Only expected extraction failures are caught. Any other exception is a bug and stops the run.
-            reports.append(
-                BatchReport(
-                    batch_id=batch.batch_id,
-                    lines=lines,
-                    status="failed",
-                    attempts=error.attempts,
-                    error=str(error),
-                )
-            )
-            continue
+    for report, batch_events in results:
+        reports.append(report)
+        events += batch_events
 
-        reports.append(
-            BatchReport(
-                batch_id=batch.batch_id,
-                lines=lines,
-                status="succeeded",
-                attempts=result.attempts,
-                model=result.model,
-                usage=result.usage,
-            )
-        )
-        events += build_timeline_events(batch, result.events)
-        lines_in_successful_batches += sum(len(span.lines) for span in batch.spans)
+    lines_in_successful_batches = sum(
+        batch.line_count for batch, report in zip(batches, reports) if report.status == "succeeded"
+    )
 
-    failed = sum(report.status == "failed" for report in reports)
+    failed_batches = sum(report.status == "failed" for report in reports)
     status: Literal["completed", "partial", "failed"]
-    if failed == 0:
+    if failed_batches == 0:
         status = "completed"
-    elif failed < len(reports):
+    elif failed_batches < len(reports):
         status = "partial"
     else:
         status = "failed"
@@ -89,3 +71,25 @@ def run_case(case_dir: Path, extractor: EventExtractor, max_chars: int) -> Timel
         batches=reports,
         events=sort_timeline(events),
     )
+
+
+async def process_batch(batch: Batch, extractor: EventExtractor) -> tuple[BatchReport, list[TimelineEvent]]:
+    lines = [f"{span.document_id}:{span.first_line}-{span.last_line}" for span in batch.spans]
+    try:
+        result = await extractor.extract_events(batch)
+    except ExtractionError as error:
+        # Only expected extraction failures are caught. Any other exception is a bug and stops the run.
+        failed = BatchReport(
+            batch_id=batch.batch_id, lines=lines, status="failed", attempts=error.attempts, error=str(error)
+        )
+        return failed, []
+
+    succeeded = BatchReport(
+        batch_id=batch.batch_id,
+        lines=lines,
+        status="succeeded",
+        attempts=result.attempts,
+        model=result.model,
+        usage=result.usage,
+    )
+    return succeeded, build_timeline_events(batch, result.events)

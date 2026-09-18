@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 import pytest
@@ -16,14 +17,14 @@ class FailingExtractor:
     def __init__(self, failing_batch_ids: set[str]) -> None:
         self.failing_batch_ids = failing_batch_ids
 
-    def extract(self, batch: Batch) -> ExtractionResult:
+    async def extract_events(self, batch: Batch) -> ExtractionResult:
         if batch.batch_id in self.failing_batch_ids:
             raise ExtractionError("provider down", attempts=3)
-        return FakeExtractor().extract(batch)
+        return await FakeExtractor().extract_events(batch)
 
 
 def test_fake_run_covers_every_line():
-    run = run_case(CASE_A_DIR, FakeExtractor(), max_chars=20_000)
+    run = asyncio.run(run_case(CASE_A_DIR, FakeExtractor(), max_chars=20_000))
 
     manifest = json.loads((DATASET_DIR / "manifest.json").read_text(encoding="utf-8"))
     assert run.status == "completed"
@@ -37,8 +38,30 @@ def test_fake_run_covers_every_line():
     assert TimelineRun.model_validate_json(run.model_dump_json()) == run
 
 
-def test_a_failed_batch_makes_the_run_partial():
-    run = run_case(CASE_B_DIR, FailingExtractor({"B-batch-002"}), max_chars=900)
+def test_batches_are_processed_at_the_same_time():
+    class SlowExtractor:
+        info = FakeExtractor.info
+
+        def __init__(self) -> None:
+            self.running = 0
+            self.most_at_once = 0
+
+        async def extract_events(self, batch: Batch) -> ExtractionResult:
+            self.running += 1
+            self.most_at_once = max(self.most_at_once, self.running)
+            await asyncio.sleep(0.01)
+            self.running -= 1
+            return await FakeExtractor().extract_events(batch)
+
+    extractor = SlowExtractor()
+
+    asyncio.run(run_case(CASE_B_DIR, extractor, max_chars=900))  # 3 batches
+
+    assert extractor.most_at_once == 3
+
+
+def test_a_failed_batch_makes_the_run_partial_and_the_others_still_finish():
+    run = asyncio.run(run_case(CASE_B_DIR, FailingExtractor({"B-batch-002"}), max_chars=900))
 
     assert run.status == "partial"
     assert [(batch.batch_id, batch.status, batch.error) for batch in run.batches] == [
@@ -52,7 +75,7 @@ def test_a_failed_batch_makes_the_run_partial():
 
 
 def test_a_run_without_any_successful_batch_is_failed():
-    run = run_case(CASE_A_DIR, FailingExtractor({"A-batch-001"}), max_chars=20_000)
+    run = asyncio.run(run_case(CASE_A_DIR, FailingExtractor({"A-batch-001"}), max_chars=20_000))
 
     assert run.status == "failed"
     assert run.events == []
@@ -63,22 +86,22 @@ def test_unexpected_errors_are_not_hidden():
     class BrokenExtractor:
         info = FakeExtractor.info
 
-        def extract(self, batch: Batch) -> ExtractionResult:
+        async def extract_events(self, batch: Batch) -> ExtractionResult:
             raise ZeroDivisionError
 
     with pytest.raises(ZeroDivisionError):
-        run_case(CASE_A_DIR, BrokenExtractor(), max_chars=20_000)
+        asyncio.run(run_case(CASE_A_DIR, BrokenExtractor(), max_chars=20_000))
 
 
 def test_the_same_event_found_in_two_batches_is_kept_twice():
     class SameEventExtractor:
         info = FakeExtractor.info
 
-        def extract(self, batch: Batch) -> ExtractionResult:
+        async def extract_events(self, batch: Batch) -> ExtractionResult:
             quote = make_quote(1, "# Birch Clinic: initial assessment", document_id="B01")
             return ExtractionResult(events=[make_event(evidence=[quote])], attempts=1)
 
-    run = run_case(CASE_B_DIR, SameEventExtractor(), max_chars=900)
+    run = asyncio.run(run_case(CASE_B_DIR, SameEventExtractor(), max_chars=900))
 
     assert [event.event_id for event in run.events] == ["B-batch-001-e01", "B-batch-002-e01", "B-batch-003-e01"]
     # Only the first batch contains B01, so the other two quotes fail the citation check.

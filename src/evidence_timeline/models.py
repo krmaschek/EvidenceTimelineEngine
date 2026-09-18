@@ -43,6 +43,10 @@ class Batch(BaseModel):
     batch_id: str
     spans: list[DocumentSpan]
 
+    @property
+    def line_count(self) -> int:
+        return sum(len(span.lines) for span in self.spans)
+
 
 # --- What the LLM must return ------------------------------------------------------
 # The JSON schema sent to the model is generated from these classes, so every

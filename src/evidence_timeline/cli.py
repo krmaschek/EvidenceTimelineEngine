@@ -4,12 +4,12 @@ Exit code 0 means success. Exit code 1 means an error or an incomplete run.
 """
 
 import argparse
+import asyncio
 import os
 import sys
 from collections.abc import Callable
 from pathlib import Path
 
-import httpx
 from pydantic import SecretStr
 
 from evidence_timeline.evaluation import (
@@ -20,43 +20,37 @@ from evidence_timeline.evaluation import (
     load_review,
     load_run,
 )
-from evidence_timeline.extractors import EventExtractor, FakeExtractor
+from evidence_timeline.extractors import FakeExtractor
 from evidence_timeline.models import TimelineRun
-from evidence_timeline.openai_compatible import (
-    DEFAULT_BASE_URL,
-    REQUIRED_PARAMETERS,
-    LLMConfig,
-    OpenAICompatibleExtractor,
-)
+from evidence_timeline.llm_extractor import DEFAULT_BASE_URL, LLMConfig, LLMExtractor
 from evidence_timeline.pipeline import run_case
 
 GOLD_DIR = Path("evidence_timeline_dataset_v1/gold")
 
 
 def extract(args: argparse.Namespace) -> int:
-    extractor: EventExtractor
-    if args.extractor == "fake":
-        extractor = FakeExtractor()
-    else:
-        extractor = create_llm_extractor(args)
-        supported = extractor.supports_required_parameters()
-        if supported is False:
-            print(f"error: {extractor.config.model} does not support all of {REQUIRED_PARAMETERS}", file=sys.stderr)
-            return 1
-        if supported is None:
-            print("warning: the provider does not list supported parameters; continuing", file=sys.stderr)
-
-    run = run_case(args.case_dir, extractor, args.max_chars)
+    run = asyncio.run(run_extraction(args))
     output = args.output
     if output is None:
         output = Path("runs") / f"case_{run.case_id}_{run.extractor.kind}_{run.created_at:%Y%m%dT%H%M%SZ}.json"
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text(run.model_dump_json(indent=2), encoding="utf-8")
+    output.write_text(run.model_dump_json(indent=2), encoding="utf-8", newline="\n")
     print_summary(run, output)
     return 0 if run.status == "completed" else 1
 
 
-def create_llm_extractor(args: argparse.Namespace) -> OpenAICompatibleExtractor:
+async def run_extraction(args: argparse.Namespace) -> TimelineRun:
+    if args.extractor == "fake":
+        return await run_case(args.case_dir, FakeExtractor(), args.max_chars)
+
+    extractor = create_llm_extractor(args)
+    try:
+        return await run_case(args.case_dir, extractor, args.max_chars)
+    finally:
+        await extractor.close()  # close the HTTP connection even if the run crashed
+
+
+def create_llm_extractor(args: argparse.Namespace) -> LLMExtractor:
     api_key = os.environ.get("LLM_API_KEY")
     model = os.environ.get("LLM_MODEL")
     if not api_key or not model:
@@ -67,8 +61,9 @@ def create_llm_extractor(args: argparse.Namespace) -> OpenAICompatibleExtractor:
         model=model,
         timeout_seconds=args.timeout,
         max_attempts=args.max_attempts,
+        max_concurrent_requests=args.max_concurrent,
     )
-    return OpenAICompatibleExtractor(config)
+    return LLMExtractor(config)
 
 
 def print_summary(run: TimelineRun, output: Path) -> None:
@@ -93,7 +88,7 @@ def review_template(args: argparse.Namespace) -> int:
     run = load_run(args.run)
     review = create_review_template(run, load_reference(GOLD_DIR, run.case_id))
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(review.model_dump_json(indent=2), encoding="utf-8")
+    args.output.write_text(review.model_dump_json(indent=2), encoding="utf-8", newline="\n")
     print(f"Wrote {args.output}. Fill in 'reviewer' and, for every decision, 'match' or 'reason'.")
     return 0
 
@@ -120,8 +115,9 @@ def main(argv: list[str] | None = None) -> int:
     extract_parser.add_argument("--extractor", choices=["fake", "llm"], required=True)
     extract_parser.add_argument("--output", type=Path, help="default: runs/case_<id>_<extractor>_<time>.json")
     extract_parser.add_argument("--max-chars", type=int, default=20_000, help="characters per batch")
-    extract_parser.add_argument("--timeout", type=float, default=120, help="HTTP timeout in seconds")
+    extract_parser.add_argument("--timeout", type=float, default=120, help="seconds allowed per LLM request")
     extract_parser.add_argument("--max-attempts", type=int, default=3, help="tries per batch")
+    extract_parser.add_argument("--max-concurrent", type=int, default=4, help="LLM requests running at the same time")
     extract_parser.set_defaults(handler=extract)
 
     template_parser = commands.add_parser("review-template", help="write an empty review file for a run")
@@ -139,7 +135,7 @@ def main(argv: list[str] | None = None) -> int:
     handler: Callable[[argparse.Namespace], int] = args.handler
     try:
         return handler(args)
-    except (ValueError, OSError, httpx.HTTPError) as error:
+    except (ValueError, OSError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 1
 
