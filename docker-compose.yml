@@ -1,0 +1,26 @@
+# Local Postgres for runs and their events.
+# Start with: docker compose up -d
+# Wipe with:  docker compose down -v
+#
+# Host port 5433, because another project on this machine already uses 5432.
+
+services:
+  db:
+    image: postgres:17
+    container_name: evidence-timeline-db
+    environment:
+      POSTGRES_USER: evidence
+      POSTGRES_PASSWORD: evidence
+      POSTGRES_DB: evidence_timeline
+    ports:
+      - "5433:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U evidence -d evidence_timeline"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  db_data:

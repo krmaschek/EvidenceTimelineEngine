@@ -24,6 +24,7 @@ from evidence_timeline.extractors import FakeExtractor
 from evidence_timeline.models import TimelineRun
 from evidence_timeline.llm_extractor import DEFAULT_BASE_URL, LLMConfig, LLMExtractor
 from evidence_timeline.pipeline import run_case
+from evidence_timeline.storage import save_run
 
 GOLD_DIR = Path("evidence_timeline_dataset_v1/gold")
 
@@ -36,6 +37,12 @@ def extract(args: argparse.Namespace) -> int:
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(run.model_dump_json(indent=2), encoding="utf-8", newline="\n")
     print_summary(run, output)
+
+    database_url = args.database_url or os.environ.get("DATABASE_URL")
+    if database_url:
+        asyncio.run(save_run(run, database_url))
+        print(f"  saved to the database as run {run.run_id}")
+
     return 0 if run.status == "completed" else 1
 
 
@@ -118,6 +125,7 @@ def main(argv: list[str] | None = None) -> int:
     extract_parser.add_argument("--timeout", type=float, default=120, help="seconds allowed per LLM request")
     extract_parser.add_argument("--max-attempts", type=int, default=3, help="tries per batch")
     extract_parser.add_argument("--max-concurrent", type=int, default=4, help="LLM requests running at the same time")
+    extract_parser.add_argument("--database-url", help="default: DATABASE_URL; without it the run is only saved as JSON")
     extract_parser.set_defaults(handler=extract)
 
     template_parser = commands.add_parser("review-template", help="write an empty review file for a run")
