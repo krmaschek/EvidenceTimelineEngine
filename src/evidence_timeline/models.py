@@ -47,6 +47,33 @@ class Batch(BaseModel):
     def line_count(self) -> int:
         return sum(len(span.lines) for span in self.spans)
 
+    def line_labels(self) -> list[str]:
+        """The lines this batch covers, e.g. ["A01:1-11", "A02:1-10"]."""
+        return [f"{span.document_id}:{span.first_line}-{span.last_line}" for span in self.spans]
+
+
+class ExtractorInfo(BaseModel):
+    kind: Literal["fake", "llm"]
+    model: str | None
+    settings: dict[str, Any]
+
+
+class CaseRequest(BaseModel):
+    """What one run needs to know before it starts."""
+
+    case_dir: str  # a string, not a Path, because it travels to a worker as JSON
+    max_chars: int
+
+
+class CasePlan(BaseModel):
+    """Everything known before any model is called: the batches, and which extractor will run them."""
+
+    case_id: str
+    extractor: ExtractorInfo
+    batches: list[Batch]
+    document_sha256: dict[str, str]
+    total_lines: int
+
 
 # --- What the LLM must return ------------------------------------------------------
 # The JSON schema sent to the model is generated from these classes, so every
@@ -132,10 +159,11 @@ class BatchReport(BaseModel):
     usage: dict[str, Any] | None = None  # token counts reported by the provider
 
 
-class ExtractorInfo(BaseModel):
-    kind: Literal["fake", "llm"]
-    model: str | None
-    settings: dict[str, Any]
+class BatchOutcome(BaseModel):
+    """What one batch produced. A failed batch has a report and no events."""
+
+    report: BatchReport
+    events: list[TimelineEvent]
 
 
 class TimelineRun(BaseModel):

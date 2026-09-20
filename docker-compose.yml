@@ -22,5 +22,18 @@ services:
       timeout: 5s
       retries: 10
 
+  # Temporal's development server: the server and its web UI in one container.
+  # UI: http://localhost:8233. Histories are kept in a file, so a restart does not lose them.
+  temporal:
+    image: temporalio/temporal:latest
+    container_name: evidence-timeline-temporal
+    command: server start-dev --ip 0.0.0.0 --db-filename /home/temporal/temporal.db
+    ports:
+      - "7233:7233"  # what the worker and the CLI connect to
+      - "8233:8233"  # web UI
+    volumes:
+      - temporal_data:/home/temporal  # the image's own user owns this directory
+
 volumes:
   db_data:
+  temporal_data:

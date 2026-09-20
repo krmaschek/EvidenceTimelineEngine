@@ -1,10 +1,14 @@
-"""Command line: `extract`, `review-template` and `evaluate`.
+"""Command line: `extract`, `submit`, `worker`, `review-template` and `evaluate`.
+
+`extract` runs a case in this process. `submit` hands the same work to a Temporal
+worker, which `worker` starts.
 
 Exit code 0 means success. Exit code 1 means an error or an incomplete run.
 """
 
 import argparse
 import asyncio
+import datetime as dt
 import os
 import sys
 from collections.abc import Callable
@@ -20,11 +24,13 @@ from evidence_timeline.evaluation import (
     load_review,
     load_run,
 )
-from evidence_timeline.extractors import FakeExtractor
-from evidence_timeline.models import TimelineRun
+from evidence_timeline.extractors import EventExtractor, FakeExtractor
+from evidence_timeline.models import CaseRequest, TimelineRun
 from evidence_timeline.llm_extractor import DEFAULT_BASE_URL, LLMConfig, LLMExtractor
 from evidence_timeline.pipeline import run_case
 from evidence_timeline.storage import save_run
+from evidence_timeline.worker import DEFAULT_ADDRESS, TASK_QUEUE, connect, run_worker
+from evidence_timeline.workflows import BATCH_TIMEOUT, BuildTimelineWorkflow
 
 GOLD_DIR = Path("evidence_timeline_dataset_v1/gold")
 
@@ -50,14 +56,14 @@ async def run_extraction(args: argparse.Namespace) -> TimelineRun:
     if args.extractor == "fake":
         return await run_case(args.case_dir, FakeExtractor(), args.max_chars)
 
-    extractor = create_llm_extractor(args)
+    extractor = create_llm_extractor(args.timeout, args.max_attempts, args.max_concurrent)
     try:
         return await run_case(args.case_dir, extractor, args.max_chars)
     finally:
         await extractor.close()  # close the HTTP connection even if the run crashed
 
 
-def create_llm_extractor(args: argparse.Namespace) -> LLMExtractor:
+def create_llm_extractor(timeout: float, max_attempts: int, max_concurrent: int) -> LLMExtractor:
     api_key = os.environ.get("LLM_API_KEY")
     model = os.environ.get("LLM_MODEL")
     if not api_key or not model:
@@ -66,9 +72,9 @@ def create_llm_extractor(args: argparse.Namespace) -> LLMExtractor:
         base_url=os.environ.get("LLM_BASE_URL") or DEFAULT_BASE_URL,
         api_key=SecretStr(api_key),
         model=model,
-        timeout_seconds=args.timeout,
-        max_attempts=args.max_attempts,
-        max_concurrent_requests=args.max_concurrent,
+        timeout_seconds=timeout,
+        max_attempts=max_attempts,
+        max_concurrent_requests=max_concurrent,
     )
     return LLMExtractor(config)
 
@@ -87,6 +93,47 @@ def print_summary(run: TimelineRun, output: Path) -> None:
     for batch in failed:
         print(f"  FAILED {batch.batch_id} ({', '.join(batch.lines)}): {batch.error}")
     print(f"  saved to {output}")
+
+
+def worker(args: argparse.Namespace) -> int:
+    if args.extractor == "fake":
+        extractor: EventExtractor = FakeExtractor()
+    else:
+        # Temporal owns the retries and the clock here, so the extractor tries once and waits long
+        # enough that Temporal's timeout is always the one that fires.
+        extractor = create_llm_extractor(BATCH_TIMEOUT.total_seconds() * 2, 1, args.max_concurrent)
+
+    database_url = args.database_url or os.environ.get("DATABASE_URL")
+    try:
+        asyncio.run(run_worker(extractor, database_url, args.address, args.max_concurrent))
+    except KeyboardInterrupt:
+        print("\nWorker stopped.")
+    return 0
+
+
+def submit(args: argparse.Namespace) -> int:
+    run = asyncio.run(submit_case(args))
+    output = args.output
+    if output is None:
+        output = Path("runs") / f"case_{run.case_id}_{run.extractor.kind}_{run.created_at:%Y%m%dT%H%M%SZ}.json"
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(run.model_dump_json(indent=2), encoding="utf-8", newline="\n")
+    print_summary(run, output)
+    return 0 if run.status == "completed" else 1
+
+
+async def submit_case(args: argparse.Namespace) -> TimelineRun:
+    """Start the workflow and wait. The work happens in the worker, not here."""
+    client = await connect(args.address)
+    request = CaseRequest(case_dir=str(args.case_dir), max_chars=args.max_chars)
+    handle = await client.start_workflow(
+        BuildTimelineWorkflow.run,
+        request,
+        id=f"timeline-{args.case_dir.name}-{dt.datetime.now(dt.UTC):%Y%m%dT%H%M%SZ}",
+        task_queue=TASK_QUEUE,
+    )
+    print(f"Workflow {handle.id} started; follow it at http://localhost:8233")
+    return await handle.result()
 
 
 def review_template(args: argparse.Namespace) -> int:
@@ -127,6 +174,20 @@ def main(argv: list[str] | None = None) -> int:
     extract_parser.add_argument("--max-concurrent", type=int, default=4, help="LLM requests running at the same time")
     extract_parser.add_argument("--database-url", help="default: DATABASE_URL; without it the run is only saved as JSON")
     extract_parser.set_defaults(handler=extract)
+
+    worker_parser = commands.add_parser("worker", help="run a Temporal worker that carries out cases")
+    worker_parser.add_argument("--extractor", choices=["fake", "llm"], required=True)
+    worker_parser.add_argument("--max-concurrent", type=int, default=4, help="activities running at the same time")
+    worker_parser.add_argument("--address", default=DEFAULT_ADDRESS, help="Temporal server")
+    worker_parser.add_argument("--database-url", help="default: DATABASE_URL; without it runs are not saved")
+    worker_parser.set_defaults(handler=worker)
+
+    submit_parser = commands.add_parser("submit", help="give one case to a worker and wait for the timeline")
+    submit_parser.add_argument("case_dir", type=Path, help="folder with the case's .md files")
+    submit_parser.add_argument("--max-chars", type=int, default=20_000, help="characters per batch")
+    submit_parser.add_argument("--address", default=DEFAULT_ADDRESS, help="Temporal server")
+    submit_parser.add_argument("--output", type=Path, help="default: runs/case_<id>_<extractor>_<time>.json")
+    submit_parser.set_defaults(handler=submit)
 
     template_parser = commands.add_parser("review-template", help="write an empty review file for a run")
     template_parser.add_argument("run", type=Path)

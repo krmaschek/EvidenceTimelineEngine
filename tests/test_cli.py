@@ -10,6 +10,7 @@ def repo_root_without_credentials(monkeypatch):
     monkeypatch.chdir(REPO_ROOT)  # the CLI finds the answer keys relative to the repository root
     monkeypatch.delenv("LLM_API_KEY", raising=False)
     monkeypatch.delenv("LLM_MODEL", raising=False)
+    monkeypatch.delenv("DATABASE_URL", raising=False)  # a test must not write into a real database
 
 
 def test_extract_with_the_fake_extractor(tmp_path, capsys):
