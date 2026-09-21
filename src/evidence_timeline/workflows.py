@@ -29,6 +29,9 @@ BATCH_RETRIES = RetryPolicy(
     backoff_coefficient=2.0,
     maximum_attempts=3,
 )
+# Without a policy Temporal retries forever. A missing case folder or a broken batch plan
+# never succeeds, so those two errors fail the run instead.
+PLAN_RETRIES = RetryPolicy(maximum_attempts=3, non_retryable_error_types=["ValueError", "RuntimeError"])
 
 
 @workflow.defn
@@ -36,7 +39,10 @@ class BuildTimelineWorkflow:
     @workflow.run
     async def run(self, request: CaseRequest) -> TimelineRun:
         plan = await workflow.execute_activity_method(
-            Activities.plan_case, request, start_to_close_timeout=timedelta(seconds=30)
+            Activities.plan_case,
+            request,
+            start_to_close_timeout=timedelta(seconds=30),
+            retry_policy=PLAN_RETRIES,
         )
         # All batches are started together. How many really run at once is the worker's limit.
         coroutines = [self.run_batch(batch) for batch in plan.batches]

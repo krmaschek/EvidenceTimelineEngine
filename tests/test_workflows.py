@@ -1,0 +1,97 @@
+"""The Temporal workflow, run in Temporal's own test environment.
+
+No server is needed: `start_time_skipping()` starts a small test server, which it
+downloads the first time it runs. Without that download these tests are skipped,
+so the rest of the suite stays offline. The test server also skips the waiting
+between retries, so a failing batch costs no real time.
+"""
+
+import asyncio
+from pathlib import Path
+
+import pytest
+from helpers import CASE_A_DIR, CASE_B_DIR
+from temporalio.client import WorkflowFailureError
+from temporalio.contrib.pydantic import pydantic_data_converter
+from temporalio.testing import WorkflowEnvironment
+from temporalio.worker import Worker
+
+from evidence_timeline.activities import Activities
+from evidence_timeline.extractors import EventExtractor, ExtractionError, ExtractionResult, FakeExtractor
+from evidence_timeline.models import Batch, CaseRequest, TimelineRun
+from evidence_timeline.worker import TASK_QUEUE
+from evidence_timeline.workflows import BuildTimelineWorkflow
+
+
+class FailingExtractor:
+    """Fails the given batches and behaves like the fake extractor for the rest."""
+
+    info = FakeExtractor.info
+
+    def __init__(self, failing_batch_ids: set[str]) -> None:
+        self.failing_batch_ids = failing_batch_ids
+
+    async def extract_events(self, batch: Batch) -> ExtractionResult:
+        if batch.batch_id in self.failing_batch_ids:
+            raise ExtractionError("provider down", attempts=1)
+        return await FakeExtractor().extract_events(batch)
+
+
+async def run_workflow(extractor: EventExtractor, case_dir: Path, max_chars: int) -> TimelineRun:
+    """Start a test server, run a worker against it, and carry out one case."""
+    try:
+        environment = await WorkflowEnvironment.start_time_skipping(data_converter=pydantic_data_converter)
+    except Exception as error:  # no test server, for example without a network connection
+        pytest.skip(f"Temporal's test server could not start: {error}")
+
+    async with environment:
+        activities = Activities(extractor, database_url=None)
+        worker = Worker(
+            environment.client,
+            task_queue=TASK_QUEUE,
+            workflows=[BuildTimelineWorkflow],
+            activities=[activities.plan_case, activities.extract_batch, activities.save_timeline_run],
+        )
+        async with worker:
+            return await environment.client.execute_workflow(
+                BuildTimelineWorkflow.run,
+                CaseRequest(case_dir=str(case_dir), max_chars=max_chars),
+                id=f"test-{case_dir.name}",
+                task_queue=TASK_QUEUE,
+            )
+
+
+def test_the_workflow_builds_a_complete_run():
+    run = asyncio.run(run_workflow(FakeExtractor(), CASE_A_DIR, max_chars=500))  # 4 batches
+
+    assert run.status == "completed"
+    assert run.case_id == "A"
+    assert run.extractor.kind == "fake"
+    assert run.total_lines == run.lines_in_successful_batches == 41
+    assert [batch.batch_id for batch in run.batches] == [f"A-batch-00{n}" for n in (1, 2, 3, 4)]
+    assert [batch.attempts for batch in run.batches] == [1, 1, 1, 1]  # counted by Temporal
+    assert [event.evidence[0].document_id for event in run.events] == ["A01", "A02", "A03", "A04"]
+    assert all(event.citation_errors == [] for event in run.events)
+
+
+def test_a_batch_that_never_succeeds_makes_the_run_partial():
+    run = asyncio.run(run_workflow(FailingExtractor({"B-batch-002"}), CASE_B_DIR, max_chars=900))  # 3 batches
+
+    assert run.status == "partial"
+    assert [batch.status for batch in run.batches] == ["succeeded", "failed", "succeeded"]
+
+    failed = run.batches[1]
+    assert failed.attempts == 3  # Temporal gave up after BATCH_RETRIES
+    assert "provider down" in failed.error
+    assert failed.lines == ["B03:1-11", "B04:1-10"]
+    assert {event.batch_id for event in run.events} == {"B-batch-001", "B-batch-003"}
+
+
+def test_a_missing_case_folder_fails_instead_of_retrying_forever():
+    missing = CASE_A_DIR.parent / "case_missing"
+
+    with pytest.raises(WorkflowFailureError) as error:
+        asyncio.run(run_workflow(FakeExtractor(), missing, max_chars=500))
+
+    # WorkflowFailureError -> ActivityError -> the ValueError the activity raised
+    assert "No Markdown documents found" in str(error.value.cause.cause)
