@@ -23,6 +23,8 @@ with workflow.unsafe.imports_passed_through():
         BatchReport,
         CaseRequest,
         EventPair,
+        Progress,
+        Stage,
         TimelineRun,
     )
     from evidence_timeline.pipeline import build_run
@@ -44,6 +46,17 @@ PLAN_RETRIES = RetryPolicy(maximum_attempts=3, non_retryable_error_types=["Value
 
 @workflow.defn
 class BuildTimelineWorkflow:
+    def __init__(self) -> None:
+        # What the progress query reports. Only the workflow itself changes these.
+        self.stage: Stage = "planning"
+        self.total_batches = 0
+        self.finished_batches = 0
+
+    @workflow.query
+    def progress(self) -> Progress:
+        """Answered by a worker whenever the API asks. It only reads, never changes anything."""
+        return Progress(stage=self.stage, total_batches=self.total_batches, finished_batches=self.finished_batches)
+
     @workflow.run
     async def run(self, request: CaseRequest) -> TimelineRun:
         plan = await workflow.execute_activity_method(
@@ -53,10 +66,13 @@ class BuildTimelineWorkflow:
             retry_policy=PLAN_RETRIES,
         )
         # Start every batch at once; the worker limits how many actually run.
+        self.stage = "extracting"
+        self.total_batches = len(plan.batches)
         coroutines = [self.run_batch(batch) for batch in plan.batches]
         outcomes = await asyncio.gather(*coroutines)
 
         # Find duplicates: simple rules pick the pairs worth checking, and the LLM decides each one.
+        self.stage = "merging"
         events = [event for outcome in outcomes for event in outcome.events]
         questions = [self.match_pair(pair) for pair in merge.candidates(events)]
         answers = await asyncio.gather(*questions)
@@ -70,15 +86,17 @@ class BuildTimelineWorkflow:
             run_id=workflow.uuid4().hex,  # from Temporal, so a replay produces the same run
             created_at=workflow.now(),
         )
+        self.stage = "saving"
         await workflow.execute_activity_method(
             Activities.save_timeline_run, run, start_to_close_timeout=timedelta(seconds=60)
         )
+        self.stage = "done"
         return run
 
     async def run_batch(self, batch: Batch) -> BatchOutcome:
         """Extract one batch on a worker. If every attempt fails, the batch is recorded as failed."""
         try:
-            return await workflow.execute_activity_method(
+            outcome = await workflow.execute_activity_method(
                 Activities.extract_batch,
                 batch,
                 start_to_close_timeout=BATCH_TIMEOUT,
@@ -97,7 +115,10 @@ class BuildTimelineWorkflow:
                 attempts=attempts,
                 error=str(error.cause),
             )
-            return BatchOutcome(report=failed, events=[])
+            outcome = BatchOutcome(report=failed, events=[])
+
+        self.finished_batches += 1  # succeeded or failed, this batch is no longer running
+        return outcome
 
     async def match_pair(self, pair: EventPair) -> EventPair | None:
         """Ask a worker whether two events are the same. None means they stay separate."""

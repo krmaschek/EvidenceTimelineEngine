@@ -13,6 +13,8 @@ EventType = Literal["visit", "procedure", "medication_start"]
 EventStatus = Literal["completed", "planned"]
 # exact: one known day | approximate: only a date range | conflicting: sources disagree | unknown: no date
 DatePrecision = Literal["exact", "approximate", "conflicting", "unknown"]
+# The steps of one workflow run, in order.
+Stage = Literal["planning", "extracting", "merging", "saving", "done"]
 
 
 # --- Input -------------------------------------------------------------------
@@ -197,3 +199,11 @@ class TimelineRun(BaseModel):
     lines_in_successful_batches: int
     batches: list[BatchReport]
     events: list[TimelineEvent]
+
+
+class Progress(BaseModel):
+    """How far a workflow run has got. The workflow's progress query returns it."""
+
+    stage: Stage
+    total_batches: int  # 0 until the case is planned
+    finished_batches: int  # succeeded or failed; either way no longer running

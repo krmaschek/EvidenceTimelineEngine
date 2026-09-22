@@ -1,22 +1,17 @@
 """The Temporal workflow, run in Temporal's own test environment.
 
-No server is needed: `start_time_skipping()` starts a small test server, which it
-downloads the first time it runs. Without that download these tests are skipped,
-so the rest of the suite stays offline. The test server also skips the waiting
-between retries, so a failing batch costs no real time.
+No server is needed: `temporal_worker` in helpers.py starts Temporal's small test
+server. The test server also skips the waiting between retries, so a failing batch
+costs no real time.
 """
 
 import asyncio
 from pathlib import Path
 
 import pytest
-from helpers import CASE_A_DIR, CASE_B_DIR
+from helpers import CASE_A_DIR, CASE_B_DIR, temporal_worker
 from temporalio.client import WorkflowFailureError
-from temporalio.contrib.pydantic import pydantic_data_converter
-from temporalio.testing import WorkflowEnvironment
-from temporalio.worker import Worker
 
-from evidence_timeline.activities import Activities
 from evidence_timeline.extractors import (
     EventExtractor,
     ExtractionError,
@@ -67,32 +62,14 @@ class AlwaysTheSameMatcher:
 async def run_workflow(
     extractor: EventExtractor, case_dir: Path, max_chars: int, matcher: EventMatcher | None = None
 ) -> TimelineRun:
-    """Start a test server, run a worker against it, and carry out one case."""
-    try:
-        environment = await WorkflowEnvironment.start_time_skipping(data_converter=pydantic_data_converter)
-    except Exception as error:  # no test server, for example without a network connection
-        pytest.skip(f"Temporal's test server could not start: {error}")
-
-    async with environment:
-        activities = Activities(extractor, matcher, database_url=None)
-        worker = Worker(
-            environment.client,
+    """Start a test server with a worker, and carry out one case."""
+    async with temporal_worker(extractor, matcher) as client:
+        return await client.execute_workflow(
+            BuildTimelineWorkflow.run,
+            CaseRequest(case_dir=str(case_dir), max_chars=max_chars),
+            id=f"test-{case_dir.name}",
             task_queue=TASK_QUEUE,
-            workflows=[BuildTimelineWorkflow],
-            activities=[
-                activities.plan_case,
-                activities.extract_batch,
-                activities.match_pair,
-                activities.save_timeline_run,
-            ],
         )
-        async with worker:
-            return await environment.client.execute_workflow(
-                BuildTimelineWorkflow.run,
-                CaseRequest(case_dir=str(case_dir), max_chars=max_chars),
-                id=f"test-{case_dir.name}",
-                task_queue=TASK_QUEUE,
-            )
 
 
 def test_the_workflow_builds_a_complete_run():

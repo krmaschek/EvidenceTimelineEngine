@@ -1,10 +1,21 @@
-"""Small builders shared by the tests."""
+"""Small builders and the Temporal test setup shared by the tests."""
 
 import datetime as dt
 import uuid
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
+import pytest
+from temporalio.client import Client
+from temporalio.contrib.pydantic import pydantic_data_converter
+from temporalio.testing import WorkflowEnvironment
+from temporalio.worker import Worker
+
+from evidence_timeline.activities import Activities
+from evidence_timeline.extractors import EventExtractor
+from evidence_timeline.merge import EventMatcher
 from evidence_timeline.models import (
     Batch,
     DocumentSpan,
@@ -14,6 +25,8 @@ from evidence_timeline.models import (
     TimelineEvent,
     TimelineRun,
 )
+from evidence_timeline.worker import TASK_QUEUE
+from evidence_timeline.workflows import BuildTimelineWorkflow
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DATASET_DIR = REPO_ROOT / "evidence_timeline_dataset_v1"
@@ -85,3 +98,32 @@ def make_run(events: list[TimelineEvent], kind: Any = "llm", status: Any = "comp
         batches=[],
         events=events,
     )
+
+
+@asynccontextmanager
+async def temporal_worker(extractor: EventExtractor, matcher: EventMatcher | None = None) -> AsyncIterator[Client]:
+    """Start Temporal's test server and a worker on it, and give back a client for that server.
+
+    `start_time_skipping()` downloads the test server the first time. Without it the
+    test is skipped, so the rest of the suite stays offline.
+    """
+    try:
+        environment = await WorkflowEnvironment.start_time_skipping(data_converter=pydantic_data_converter)
+    except Exception as error:  # no test server, for example without a network connection
+        pytest.skip(f"Temporal's test server could not start: {error}")
+
+    async with environment:
+        activities = Activities(extractor, matcher, database_url=None)
+        worker = Worker(
+            environment.client,
+            task_queue=TASK_QUEUE,
+            workflows=[BuildTimelineWorkflow],
+            activities=[
+                activities.plan_case,
+                activities.extract_batch,
+                activities.match_pair,
+                activities.save_timeline_run,
+            ],
+        )
+        async with worker:
+            yield environment.client
