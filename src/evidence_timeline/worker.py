@@ -11,6 +11,7 @@ from temporalio.worker import Worker
 
 from evidence_timeline.activities import Activities
 from evidence_timeline.extractors import EventExtractor
+from evidence_timeline.merge import EventMatcher
 from evidence_timeline.workflows import BuildTimelineWorkflow
 
 DEFAULT_ADDRESS = "localhost:7233"
@@ -23,20 +24,30 @@ async def connect(address: str) -> Client:
 
 
 async def run_worker(
-    extractor: EventExtractor, database_url: str | None, address: str, max_concurrent: int
+    extractor: EventExtractor,
+    matcher: EventMatcher | None,
+    database_url: str | None,
+    address: str,
+    max_concurrent: int,
 ) -> None:
     client = await connect(address)
-    activities = Activities(extractor, database_url)
+    activities = Activities(extractor, matcher, database_url)
     worker = Worker(
         client,
         task_queue=TASK_QUEUE,
         workflows=[BuildTimelineWorkflow],
-        activities=[activities.plan_case, activities.extract_batch, activities.save_timeline_run],
+        activities=[
+            activities.plan_case,
+            activities.extract_batch,
+            activities.match_pair,
+            activities.save_timeline_run,
+        ],
         # The limit that really decides how many LLM calls happen at once.
         max_concurrent_activities=max_concurrent,
     )
     print(f"Worker ready on {address}, task queue {TASK_QUEUE!r}.")
     print(f"  extractor: {extractor.info.kind}, at most {max_concurrent} activities at a time")
+    print(f"  merging: {'yes' if matcher else 'no'}")
     print(f"  database: {'yes' if database_url else 'no'}")
     print("  submit a case with: evidence-timeline submit <case folder>")
     print("  stop with Ctrl+C")

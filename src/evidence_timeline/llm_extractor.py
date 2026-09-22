@@ -1,7 +1,9 @@
-"""Event extraction through an OpenAI-compatible chat API (OpenRouter by default).
+"""Extract events from one batch with an LLM (any OpenAI-compatible chat API).
 
-This is the only file that knows about the provider. Another OpenAI-compatible
-provider only needs different LLM_* settings.
+Each batch is sent as one request, and the answer must match our JSON schema.
+Timeouts, rate limits and server errors are retried with backoff and jitter; other
+errors fail at once. The Temporal worker sets max_attempts to 1 and lets Temporal
+do the retrying.
 """
 
 import asyncio

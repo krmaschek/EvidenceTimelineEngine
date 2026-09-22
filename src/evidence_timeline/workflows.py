@@ -1,12 +1,8 @@
-"""The plan: what happens for one case, and in what order.
+"""What happens for one case, and in what order.
 
-A workflow is replayed from its history after a crash, so it must always take the
-same decisions. That is why there are no files, no HTTP calls and no database
-writes here, and why the run's id and time come from Temporal instead of from
-`uuid4()` and `datetime.now()`.
-
-Imports are passed through the workflow sandbox: our own modules are ordinary
-Python, and importing them must not execute anything.
+Temporal replays a workflow from its history after a crash, so this code must make
+the same decisions every time. Real work (files, LLM calls, database) happens in
+activities, and the run's id and time come from Temporal.
 """
 
 import asyncio
@@ -16,21 +12,32 @@ from temporalio import workflow
 from temporalio.common import RetryPolicy
 from temporalio.exceptions import ActivityError
 
+# Let the sandbox reuse these modules instead of re-importing them for every run;
+# they have no side effects on import.
 with workflow.unsafe.imports_passed_through():
+    from evidence_timeline import merge
     from evidence_timeline.activities import Activities
-    from evidence_timeline.models import Batch, BatchOutcome, BatchReport, CaseRequest, TimelineRun
+    from evidence_timeline.models import (
+        Batch,
+        BatchOutcome,
+        BatchReport,
+        CaseRequest,
+        EventPair,
+        TimelineRun,
+    )
     from evidence_timeline.pipeline import build_run
 
-# Temporal owns the clock and the retries here; the extractor's own loop is switched off in the worker,
-# so there is one visible retry mechanism instead of two that multiply.
+# Temporal handles timeouts and retries. The extractor's own retry loop is off in the worker,
+# so the two don't multiply.
 BATCH_TIMEOUT = timedelta(seconds=120)
-BATCH_RETRIES = RetryPolicy(
+MATCH_TIMEOUT = timedelta(seconds=60)  # one pair is a much smaller question than one batch
+LLM_RETRIES = RetryPolicy(
     initial_interval=timedelta(seconds=1),
     backoff_coefficient=2.0,
     maximum_attempts=3,
 )
-# Without a policy Temporal retries forever. A missing case folder or a broken batch plan
-# never succeeds, so those two errors fail the run instead.
+# Without a policy Temporal retries forever. A missing folder or a bad plan won't fix itself,
+# so these errors fail at once.
 PLAN_RETRIES = RetryPolicy(maximum_attempts=3, non_retryable_error_types=["ValueError", "RuntimeError"])
 
 
@@ -44,13 +51,20 @@ class BuildTimelineWorkflow:
             start_to_close_timeout=timedelta(seconds=30),
             retry_policy=PLAN_RETRIES,
         )
-        # All batches are started together. How many really run at once is the worker's limit.
+        # Start every batch at once; the worker limits how many actually run.
         coroutines = [self.run_batch(batch) for batch in plan.batches]
         outcomes = await asyncio.gather(*coroutines)
+
+        # Find duplicates: simple rules pick the pairs worth checking, and the LLM decides each one.
+        events = [event for outcome in outcomes for event in outcome.events]
+        questions = [self.match_pair(pair) for pair in merge.candidates(events)]
+        answers = await asyncio.gather(*questions)
+        confirmed_pairs = [pair for pair in answers if pair is not None]
 
         run = build_run(
             plan,
             outcomes,
+            confirmed_pairs,
             request.max_chars,
             run_id=workflow.uuid4().hex,  # from Temporal, so a replay produces the same run
             created_at=workflow.now(),
@@ -61,21 +75,35 @@ class BuildTimelineWorkflow:
         return run
 
     async def run_batch(self, batch: Batch) -> BatchOutcome:
-        """Ask a worker to extract one batch, and decide what it means if it never succeeds."""
+        """Extract one batch on a worker. If every attempt fails, the batch is recorded as failed."""
         try:
             return await workflow.execute_activity_method(
                 Activities.extract_batch,
                 batch,
                 start_to_close_timeout=BATCH_TIMEOUT,
-                retry_policy=BATCH_RETRIES,
+                retry_policy=LLM_RETRIES,
             )
         except ActivityError as error:
-            # Temporal has used up its attempts. The other batches still finish and the run is "partial".
+            # Out of attempts. The other batches carry on and the run ends up "partial".
             failed = BatchReport(
                 batch_id=batch.batch_id,
                 lines=batch.line_labels(),
                 status="failed",
-                attempts=BATCH_RETRIES.maximum_attempts,
+                attempts=LLM_RETRIES.maximum_attempts,
                 error=str(error.cause),
             )
             return BatchOutcome(report=failed, events=[])
+
+    async def match_pair(self, pair: EventPair) -> EventPair | None:
+        """Ask a worker whether two events are the same. None means they stay separate."""
+        try:
+            decision = await workflow.execute_activity_method(
+                Activities.match_pair,
+                pair,
+                start_to_close_timeout=MATCH_TIMEOUT,
+                retry_policy=LLM_RETRIES,
+            )
+        except ActivityError:
+            # A pair we could not decide is left alone. A duplicate is better than a wrong merge.
+            return None
+        return pair if decision.same_event else None

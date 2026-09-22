@@ -18,7 +18,8 @@ from temporalio.worker import Worker
 
 from evidence_timeline.activities import Activities
 from evidence_timeline.extractors import EventExtractor, ExtractionError, ExtractionResult, FakeExtractor
-from evidence_timeline.models import Batch, CaseRequest, TimelineRun
+from evidence_timeline.merge import EventMatcher
+from evidence_timeline.models import Batch, CaseRequest, EventPair, MatchDecision, TimelineRun
 from evidence_timeline.worker import TASK_QUEUE
 from evidence_timeline.workflows import BuildTimelineWorkflow
 
@@ -37,7 +38,16 @@ class FailingExtractor:
         return await FakeExtractor().extract_events(batch)
 
 
-async def run_workflow(extractor: EventExtractor, case_dir: Path, max_chars: int) -> TimelineRun:
+class AlwaysTheSameMatcher:
+    """Says yes to every pair, so the tests can see the merging without a model."""
+
+    async def is_same(self, pair: EventPair) -> MatchDecision:
+        return MatchDecision(same_event=True, reason="test matcher")
+
+
+async def run_workflow(
+    extractor: EventExtractor, case_dir: Path, max_chars: int, matcher: EventMatcher | None = None
+) -> TimelineRun:
     """Start a test server, run a worker against it, and carry out one case."""
     try:
         environment = await WorkflowEnvironment.start_time_skipping(data_converter=pydantic_data_converter)
@@ -45,12 +55,17 @@ async def run_workflow(extractor: EventExtractor, case_dir: Path, max_chars: int
         pytest.skip(f"Temporal's test server could not start: {error}")
 
     async with environment:
-        activities = Activities(extractor, database_url=None)
+        activities = Activities(extractor, matcher, database_url=None)
         worker = Worker(
             environment.client,
             task_queue=TASK_QUEUE,
             workflows=[BuildTimelineWorkflow],
-            activities=[activities.plan_case, activities.extract_batch, activities.save_timeline_run],
+            activities=[
+                activities.plan_case,
+                activities.extract_batch,
+                activities.match_pair,
+                activities.save_timeline_run,
+            ],
         )
         async with worker:
             return await environment.client.execute_workflow(
@@ -81,7 +96,7 @@ def test_a_batch_that_never_succeeds_makes_the_run_partial():
     assert [batch.status for batch in run.batches] == ["succeeded", "failed", "succeeded"]
 
     failed = run.batches[1]
-    assert failed.attempts == 3  # Temporal gave up after BATCH_RETRIES
+    assert failed.attempts == 3  # Temporal gave up after LLM_RETRIES
     assert "provider down" in failed.error
     assert failed.lines == ["B03:1-11", "B04:1-10"]
     assert {event.batch_id for event in run.events} == {"B-batch-001", "B-batch-003"}
@@ -95,3 +110,13 @@ def test_a_missing_case_folder_fails_instead_of_retrying_forever():
 
     # WorkflowFailureError -> ActivityError -> the ValueError the activity raised
     assert "No Markdown documents found" in str(error.value.cause.cause)
+
+
+def test_a_worker_with_a_matcher_merges_what_it_confirms():
+    # The fake extractor returns one placeholder event per document, all undated and all of the
+    # same kind, so every pair is a candidate and this matcher confirms all of them.
+    run = asyncio.run(run_workflow(FakeExtractor(), CASE_A_DIR, 500, AlwaysTheSameMatcher()))
+
+    assert len(run.events) == 1
+    assert len(run.events[0].merged_from) == 4
+    assert [quote.document_id for quote in run.events[0].evidence] == ["A01", "A02", "A03", "A04"]

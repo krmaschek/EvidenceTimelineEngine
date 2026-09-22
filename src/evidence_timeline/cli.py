@@ -27,6 +27,7 @@ from evidence_timeline.evaluation import (
 from evidence_timeline.extractors import EventExtractor, FakeExtractor
 from evidence_timeline.models import CaseRequest, TimelineRun
 from evidence_timeline.llm_extractor import DEFAULT_BASE_URL, LLMConfig, LLMExtractor
+from evidence_timeline.llm_matcher import LLMMatcher
 from evidence_timeline.pipeline import run_case
 from evidence_timeline.storage import save_run
 from evidence_timeline.worker import DEFAULT_ADDRESS, TASK_QUEUE, connect, run_worker
@@ -56,19 +57,22 @@ async def run_extraction(args: argparse.Namespace) -> TimelineRun:
     if args.extractor == "fake":
         return await run_case(args.case_dir, FakeExtractor(), args.max_chars)
 
-    extractor = create_llm_extractor(args.timeout, args.max_attempts, args.max_concurrent)
+    config = create_llm_config(args.timeout, args.max_attempts, args.max_concurrent)
+    extractor, matcher = LLMExtractor(config), LLMMatcher(config)
     try:
-        return await run_case(args.case_dir, extractor, args.max_chars)
+        return await run_case(args.case_dir, extractor, args.max_chars, matcher)
     finally:
-        await extractor.close()  # close the HTTP connection even if the run crashed
+        # Close the HTTP connections even if the run crashed.
+        await extractor.close()
+        await matcher.close()
 
 
-def create_llm_extractor(timeout: float, max_attempts: int, max_concurrent: int) -> LLMExtractor:
+def create_llm_config(timeout: float, max_attempts: int, max_concurrent: int) -> LLMConfig:
     api_key = os.environ.get("LLM_API_KEY")
     model = os.environ.get("LLM_MODEL")
     if not api_key or not model:
         raise ValueError("set LLM_API_KEY and LLM_MODEL (see .env.example)")
-    config = LLMConfig(
+    return LLMConfig(
         base_url=os.environ.get("LLM_BASE_URL") or DEFAULT_BASE_URL,
         api_key=SecretStr(api_key),
         model=model,
@@ -76,12 +80,11 @@ def create_llm_extractor(timeout: float, max_attempts: int, max_concurrent: int)
         max_attempts=max_attempts,
         max_concurrent_requests=max_concurrent,
     )
-    return LLMExtractor(config)
 
 
 def print_summary(run: TimelineRun, output: Path) -> None:
     failed = [batch for batch in run.batches if batch.status == "failed"]
-    print(f"Case {run.case_id}: {run.status.upper()} (preliminary timeline, events may repeat)")
+    print(f"Case {run.case_id}: {run.status.upper()}")
     if run.extractor.kind == "fake":
         print("  fake extractor: pipeline test only, not a real extraction")
     else:
@@ -89,23 +92,29 @@ def print_summary(run: TimelineRun, output: Path) -> None:
         print(f"  model requested: {run.extractor.model}, reported by the provider: {', '.join(reported) or '-'}")
     print(f"  batches: {len(run.batches) - len(failed)} succeeded, {len(failed)} failed")
     print(f"  lines in successful batches: {run.lines_in_successful_batches} of {run.total_lines}")
-    print(f"  events: {len(run.events)}, needing review: {sum(event.needs_review for event in run.events)}")
+    merged = sum(bool(event.merged_from) for event in run.events)
+    print(
+        f"  events: {len(run.events)}, merged from several records: {merged}, "
+        f"needing review: {sum(event.needs_review for event in run.events)}"
+    )
     for batch in failed:
         print(f"  FAILED {batch.batch_id} ({', '.join(batch.lines)}): {batch.error}")
     print(f"  saved to {output}")
 
 
 def worker(args: argparse.Namespace) -> int:
+    matcher = None
     if args.extractor == "fake":
         extractor: EventExtractor = FakeExtractor()
     else:
         # Temporal owns the retries and the clock here, so the extractor tries once and waits long
         # enough that Temporal's timeout is always the one that fires.
-        extractor = create_llm_extractor(BATCH_TIMEOUT.total_seconds() * 2, 1, args.max_concurrent)
+        config = create_llm_config(BATCH_TIMEOUT.total_seconds() * 2, 1, args.max_concurrent)
+        extractor, matcher = LLMExtractor(config), LLMMatcher(config)
 
     database_url = args.database_url or os.environ.get("DATABASE_URL")
     try:
-        asyncio.run(run_worker(extractor, database_url, args.address, args.max_concurrent))
+        asyncio.run(run_worker(extractor, matcher, database_url, args.address, args.max_concurrent))
     except KeyboardInterrupt:
         print("\nWorker stopped.")
     return 0
@@ -164,7 +173,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="evidence-timeline")
     commands = parser.add_subparsers(required=True)
 
-    extract_parser = commands.add_parser("extract", help="build a preliminary timeline for one case")
+    extract_parser = commands.add_parser("extract", help="build the timeline for one case")
     extract_parser.add_argument("case_dir", type=Path, help="folder with the case's .md files")
     extract_parser.add_argument("--extractor", choices=["fake", "llm"], required=True)
     extract_parser.add_argument("--output", type=Path, help="default: runs/case_<id>_<extractor>_<time>.json")

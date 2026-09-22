@@ -1,15 +1,8 @@
-"""Pipeline for one case: documents -> batches -> LLM -> checks -> sorted timeline.
+"""Pipeline for one case: documents -> batches -> LLM -> checks -> merge -> sorted timeline.
 
-The work is split into three pieces so that both ways of running it, the CLI and
-the Temporal workflow, use the same code:
-
-- `plan_case` reads the files and builds the batches;
-- `process_batch` turns one batch into events;
-- `build_run` puts the finished parts together.
-
-`run_case` is the CLI's way: it starts all batches together and lets the extractor
-limit how many LLM calls run at the same time. A failed batch is recorded and the
-others still finish, but the run is then marked "partial" (or "failed").
+The CLI and the Temporal workflow share `plan_case` and `build_run`. The rest is the
+CLI's way of running a case without Temporal: `process_batch` and `confirm_pair`
+follow the same rules as the workflow's `run_batch` and `match_pair`.
 """
 
 import asyncio
@@ -18,14 +11,19 @@ import uuid
 from pathlib import Path
 from typing import Literal
 
+import httpx
+
+from evidence_timeline import merge
 from evidence_timeline.batching import build_batches, check_coverage
 from evidence_timeline.documents import load_documents
 from evidence_timeline.extractors import EventExtractor, ExtractionError
+from evidence_timeline.merge import EventMatcher
 from evidence_timeline.models import (
     Batch,
     BatchOutcome,
     BatchReport,
     CasePlan,
+    EventPair,
     ExtractorInfo,
     TimelineRun,
 )
@@ -33,8 +31,11 @@ from evidence_timeline.prompts import PROMPT_SHA256
 from evidence_timeline.timeline import ORDERING_NOTE, build_timeline_events, sort_timeline
 
 NOTES = [
-    "PRELIMINARY timeline: duplicates are not merged and conflicts between documents are not "
-    "detected yet, so the same event can appear more than once.",
+    "Events that more than one document records are merged into one, keeping every quote. "
+    "Two events are only compared when they are the same type and status and their dates are "
+    f"within {merge.WINDOW.days} days, so the same event recorded much later is not found.",
+    "When merged sources disagree about the day, the event is marked 'conflicting' and every "
+    "date is kept. The disagreement is reported, not resolved.",
     "An empty citation_errors list means each quote was found at its cited lines. "
     "It does not mean the quote supports the event.",
     ORDERING_NOTE,
@@ -56,15 +57,23 @@ def plan_case(case_dir: Path, max_chars: int, extractor: ExtractorInfo) -> CaseP
     )
 
 
-async def run_case(case_dir: Path, extractor: EventExtractor, max_chars: int) -> TimelineRun:
+async def run_case(
+    case_dir: Path, extractor: EventExtractor, max_chars: int, matcher: EventMatcher | None = None
+) -> TimelineRun:
     plan = plan_case(case_dir, max_chars, extractor.info)
 
     coroutines = [process_batch(batch, extractor) for batch in plan.batches]
     outcomes = await asyncio.gather(*coroutines)  # results come back in the order of the batches
 
+    events = [event for outcome in outcomes for event in outcome.events]
+    questions = [confirm_pair(pair, matcher) for pair in merge.candidates(events)]
+    answers = await asyncio.gather(*questions)
+    confirmed_pairs = [pair for pair in answers if pair is not None]
+
     return build_run(
         plan,
         outcomes,
+        confirmed_pairs,
         max_chars,
         run_id=uuid.uuid4().hex,
         created_at=dt.datetime.now(dt.UTC),
@@ -72,7 +81,10 @@ async def run_case(case_dir: Path, extractor: EventExtractor, max_chars: int) ->
 
 
 async def process_batch(batch: Batch, extractor: EventExtractor) -> BatchOutcome:
-    """One batch, with its own retries inside the extractor. A failure becomes a failed report."""
+    """Extract one batch.
+
+    The extractor retries on its own; if it still fails, the batch is recorded as failed.
+    """
     try:
         result = await extractor.extract_events(batch)
     except ExtractionError as error:
@@ -97,17 +109,30 @@ async def process_batch(batch: Batch, extractor: EventExtractor) -> BatchOutcome
     return BatchOutcome(report=succeeded, events=build_timeline_events(batch, result.events))
 
 
+async def confirm_pair(pair: EventPair, matcher: EventMatcher | None) -> EventPair | None:
+    """Ask whether two events are the same. None means they stay separate."""
+    if matcher is None:  # no matcher (a fake run), so nothing is merged
+        return None
+    try:
+        decision = await matcher.is_same(pair)
+    except (TimeoutError, httpx.HTTPError, ValueError, KeyError, IndexError):
+        return None  # could not decide: a duplicate is better than a wrong merge
+    return pair if decision.same_event else None
+
+
 def build_run(
     plan: CasePlan,
     outcomes: list[BatchOutcome],
+    confirmed_pairs: list[EventPair],
     max_chars: int,
     run_id: str,
     created_at: dt.datetime,
 ) -> TimelineRun:
-    """Put the finished batches together. Pure: the run's identity and time are given, not made here,
-    because a Temporal workflow has to take them from Temporal."""
+    """Combine the finished batches into one run. The id and time are passed in because a workflow
+    must get them from Temporal."""
     reports = [outcome.report for outcome in outcomes]
     events = [event for outcome in outcomes for event in outcome.events]
+    merged = merge.merge_events(events, confirmed_pairs)
 
     lines_in_successful_batches = sum(
         batch.line_count for batch, report in zip(plan.batches, reports) if report.status == "succeeded"
@@ -135,5 +160,5 @@ def build_run(
         total_lines=plan.total_lines,
         lines_in_successful_batches=lines_in_successful_batches,
         batches=reports,
-        events=sort_timeline(events),
+        events=sort_timeline(merged),
     )

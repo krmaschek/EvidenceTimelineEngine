@@ -5,7 +5,7 @@ import pytest
 from helpers import CASE_A_DIR, CASE_B_DIR, DATASET_DIR, REPO_ROOT, make_event, make_quote
 
 from evidence_timeline.extractors import ExtractionError, ExtractionResult, FakeExtractor
-from evidence_timeline.models import Batch, TimelineRun
+from evidence_timeline.models import Batch, EventPair, MatchDecision, TimelineRun
 from evidence_timeline.pipeline import run_case
 
 
@@ -34,7 +34,7 @@ def test_fake_run_covers_every_line():
     assert run.document_sha256 == {d["document_id"]: d["sha256"] for d in manifest["documents"] if d["case_id"] == "A"}
     assert [event.evidence[0].document_id for event in run.events] == ["A01", "A02", "A03", "A04"]
     assert all(event.citation_errors == [] for event in run.events)
-    assert "PRELIMINARY" in run.notes[0]
+    assert "merged into one" in run.notes[0]
     assert TimelineRun.model_validate_json(run.model_dump_json()) == run
 
 
@@ -106,6 +106,19 @@ def test_the_same_event_found_in_two_batches_is_kept_twice():
     assert [event.event_id for event in run.events] == ["B-batch-001-e01", "B-batch-002-e01", "B-batch-003-e01"]
     # Only the first batch contains B01, so the other two quotes fail the citation check.
     assert [len(event.citation_errors) for event in run.events] == [0, 1, 1]
+
+
+def test_a_matcher_that_times_out_leaves_the_events_separate():
+    class TimingOutMatcher:
+        async def is_same(self, pair: EventPair) -> MatchDecision:
+            raise TimeoutError
+
+    # The fake extractor gives four undated events of the same kind, so every pair is asked about.
+    run = asyncio.run(run_case(CASE_A_DIR, FakeExtractor(), 20_000, TimingOutMatcher()))
+
+    assert run.status == "completed"
+    assert len(run.events) == 4
+    assert all(event.merged_from == [] for event in run.events)
 
 
 def test_extraction_code_never_imports_the_evaluator():

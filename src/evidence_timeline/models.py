@@ -147,6 +147,23 @@ class TimelineEvent(ExtractedEvent):
     batch_id: str
     citation_errors: list[str]  # empty when every quote was found at its cited lines
     needs_review: bool
+    merged_from: list[str] = []  # the event_ids merged into this one; empty when nothing was merged
+
+
+class EventPair(BaseModel):
+    """Two events that might describe the same thing. An activity takes one argument, so they travel together."""
+
+    a: TimelineEvent
+    b: TimelineEvent
+
+
+class MatchDecision(BaseModel):
+    """The answer to one pair. The reason is kept so a merge can be explained afterwards."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    same_event: bool
+    reason: str
 
 
 class BatchReport(BaseModel):

@@ -14,13 +14,26 @@ from temporalio import activity
 
 from evidence_timeline import pipeline, storage
 from evidence_timeline.extractors import EventExtractor
-from evidence_timeline.models import Batch, BatchOutcome, BatchReport, CasePlan, CaseRequest, TimelineRun
+from evidence_timeline.merge import EventMatcher
+from evidence_timeline.models import (
+    Batch,
+    BatchOutcome,
+    BatchReport,
+    CasePlan,
+    CaseRequest,
+    EventPair,
+    MatchDecision,
+    TimelineRun,
+)
 from evidence_timeline.timeline import build_timeline_events
 
 
 class Activities:
-    def __init__(self, extractor: EventExtractor, database_url: str | None) -> None:
+    def __init__(
+        self, extractor: EventExtractor, matcher: EventMatcher | None, database_url: str | None
+    ) -> None:
         self.extractor = extractor
+        self.matcher = matcher
         self.database_url = database_url
 
     @activity.defn
@@ -40,6 +53,12 @@ class Activities:
             usage=result.usage,
         )
         return BatchOutcome(report=report, events=build_timeline_events(batch, result.events))
+
+    @activity.defn
+    async def match_pair(self, pair: EventPair) -> MatchDecision:
+        if self.matcher is None:  # a fake run has no model to ask, so nothing is merged
+            return MatchDecision(same_event=False, reason="no matcher configured")
+        return await self.matcher.is_same(pair)
 
     @activity.defn
     async def save_timeline_run(self, run: TimelineRun) -> None:
