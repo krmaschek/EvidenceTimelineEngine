@@ -16,7 +16,7 @@ from temporalio.client import Client
 
 from evidence_timeline import api
 from evidence_timeline.extractors import ExtractionResult, FakeExtractor
-from evidence_timeline.models import Batch
+from evidence_timeline.models import Batch, Domain
 
 
 class WaitingExtractor:
@@ -27,9 +27,9 @@ class WaitingExtractor:
     def __init__(self) -> None:
         self.go = asyncio.Event()
 
-    async def extract_events(self, batch: Batch) -> ExtractionResult:
+    async def extract_events(self, batch: Batch, domain: Domain) -> ExtractionResult:
         await self.go.wait()
-        return await FakeExtractor().extract_events(batch)
+        return await FakeExtractor().extract_events(batch, domain)
 
 
 @asynccontextmanager

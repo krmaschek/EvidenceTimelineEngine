@@ -14,6 +14,7 @@ from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
 
 from evidence_timeline.activities import Activities
+from evidence_timeline.datasets import load_domain
 from evidence_timeline.extractors import EventExtractor
 from evidence_timeline.merge import EventMatcher
 from evidence_timeline.models import (
@@ -33,6 +34,7 @@ DATASET_DIR = REPO_ROOT / "evidence_timeline_dataset_v1"
 CASE_A_DIR = DATASET_DIR / "inputs" / "case_A"
 CASE_B_DIR = DATASET_DIR / "inputs" / "case_B"
 GOLD_DIR = DATASET_DIR / "gold"
+CLINICAL_DOMAIN = load_domain(CASE_A_DIR)  # read from the dataset's domain.json and scope.md
 
 APPROXIMATE_MARCH = {
     "date": None,

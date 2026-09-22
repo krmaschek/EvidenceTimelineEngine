@@ -20,7 +20,7 @@ from evidence_timeline.extractors import (
     PermanentExtractionError,
 )
 from evidence_timeline.merge import EventMatcher
-from evidence_timeline.models import Batch, CaseRequest, EventPair, MatchDecision, TimelineRun
+from evidence_timeline.models import Batch, CaseRequest, Domain, EventPair, MatchDecision, TimelineRun
 from evidence_timeline.worker import TASK_QUEUE
 from evidence_timeline.workflows import BuildTimelineWorkflow
 
@@ -33,10 +33,10 @@ class FailingExtractor:
     def __init__(self, failing_batch_ids: set[str]) -> None:
         self.failing_batch_ids = failing_batch_ids
 
-    async def extract_events(self, batch: Batch) -> ExtractionResult:
+    async def extract_events(self, batch: Batch, domain: Domain) -> ExtractionResult:
         if batch.batch_id in self.failing_batch_ids:
             raise ExtractionError("provider down", attempts=1)
-        return await FakeExtractor().extract_events(batch)
+        return await FakeExtractor().extract_events(batch, domain)
 
 
 class WrongKeyExtractor:
@@ -47,7 +47,7 @@ class WrongKeyExtractor:
     def __init__(self) -> None:
         self.calls = 0
 
-    async def extract_events(self, batch: Batch) -> ExtractionResult:
+    async def extract_events(self, batch: Batch, domain: Domain) -> ExtractionResult:
         self.calls += 1
         raise PermanentExtractionError("HTTP 401: wrong API key", attempts=1)
 

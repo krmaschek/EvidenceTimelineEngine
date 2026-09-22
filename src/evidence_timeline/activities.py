@@ -16,9 +16,9 @@ from evidence_timeline import pipeline, storage
 from evidence_timeline.extractors import EventExtractor
 from evidence_timeline.merge import EventMatcher
 from evidence_timeline.models import (
-    Batch,
     BatchOutcome,
     BatchReport,
+    BatchTask,
     CasePlan,
     CaseRequest,
     EventPair,
@@ -42,8 +42,9 @@ class Activities:
         return pipeline.plan_case(Path(request.case_dir), request.max_chars, self.extractor.info)
 
     @activity.defn
-    async def extract_batch(self, batch: Batch) -> BatchOutcome:
-        result = await self.extractor.extract_events(batch)
+    async def extract_batch(self, task: BatchTask) -> BatchOutcome:
+        batch = task.batch
+        result = await self.extractor.extract_events(batch, task.domain)
         report = BatchReport(
             batch_id=batch.batch_id,
             lines=batch.line_labels(),

@@ -8,7 +8,7 @@ from typing import Any, Protocol
 
 from pydantic import BaseModel
 
-from evidence_timeline.models import Batch, EvidenceQuote, ExtractedEvent, ExtractorInfo
+from evidence_timeline.models import Batch, Domain, EvidenceQuote, ExtractedEvent, ExtractorInfo
 
 
 class ExtractionError(Exception):
@@ -33,7 +33,7 @@ class ExtractionResult(BaseModel):
 class EventExtractor(Protocol):
     info: ExtractorInfo  # stored with the run
 
-    async def extract_events(self, batch: Batch) -> ExtractionResult: ...
+    async def extract_events(self, batch: Batch, domain: Domain) -> ExtractionResult: ...
 
 
 class FakeExtractor:
@@ -46,22 +46,23 @@ class FakeExtractor:
 
     info = ExtractorInfo(kind="fake", model=None, settings={})
 
-    async def extract_events(self, batch: Batch) -> ExtractionResult:
+    async def extract_events(self, batch: Batch, domain: Domain) -> ExtractionResult:
+        event_type = domain.event_types[0].name  # a placeholder, not a judgement about the text
         events = []
         for span in batch.spans:
             for line_number, text in span.numbered_lines():
                 if text.strip():
-                    events.append(placeholder_event(span.document_id, line_number, text))
+                    events.append(placeholder_event(span.document_id, line_number, text, event_type))
                     break
         return ExtractionResult(events=events, attempts=1)
 
 
-def placeholder_event(document_id: str, line_number: int, text: str) -> ExtractedEvent:
+def placeholder_event(document_id: str, line_number: int, text: str, event_type: str) -> ExtractedEvent:
     quote = EvidenceQuote(
         document_id=document_id, line_start=line_number, line_end=line_number, quote=text, date_text=None
     )
     return ExtractedEvent(
-        event_type="visit",  # a fixed placeholder, not a judgement about the text
+        event_type=event_type,
         status="completed",
         description=f"[FAKE] placeholder for {document_id}",
         date=None,

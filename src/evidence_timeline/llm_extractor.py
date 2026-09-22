@@ -15,7 +15,7 @@ import httpx
 from pydantic import BaseModel, SecretStr
 
 from evidence_timeline.extractors import ExtractionError, ExtractionResult, PermanentExtractionError
-from evidence_timeline.models import Batch, ExtractionResponse, ExtractorInfo
+from evidence_timeline.models import Batch, Domain, ExtractionResponse, ExtractorInfo
 from evidence_timeline.prompts import build_messages
 
 DEFAULT_BASE_URL = "https://openrouter.ai/api/v1"
@@ -67,17 +67,17 @@ class LLMExtractor:
     async def close(self) -> None:
         await self.client.aclose()
 
-    async def extract_events(self, batch: Batch) -> ExtractionResult:
+    async def extract_events(self, batch: Batch, domain: Domain) -> ExtractionResult:
         request: dict[str, Any] = {
             "model": self.config.model,
-            "messages": build_messages(batch),
+            "messages": build_messages(batch, domain),
             # Ask the provider to force the answer into our JSON schema.
             "response_format": {
                 "type": "json_schema",
                 "json_schema": {
                     "name": "timeline_events",
                     "strict": True,
-                    "schema": ExtractionResponse.model_json_schema(),
+                    "schema": extraction_schema(domain),
                 },
             },
             "temperature": TEMPERATURE,
@@ -114,3 +114,15 @@ class LLMExtractor:
                 await self.sleep(2 ** (attempt - 1) + random.random())  # 1 s, 2 s, 4 s, ... plus up to 1 s jitter
 
         raise ExtractionError(f"failed after {self.config.max_attempts} attempts: {error}", self.config.max_attempts)
+
+
+def extraction_schema(domain: Domain) -> dict[str, Any]:
+    """The JSON schema of ExtractionResponse, with event_type limited to this domain's types.
+
+    In Python event_type is a plain string, because each dataset has its own types. The
+    provider enforces the allowed values through this schema.
+    """
+    schema = ExtractionResponse.model_json_schema()
+    event_type = schema["$defs"]["ExtractedEvent"]["properties"]["event_type"]
+    event_type["enum"] = [definition.name for definition in domain.event_types]
+    return schema

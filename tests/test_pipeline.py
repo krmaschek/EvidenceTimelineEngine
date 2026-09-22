@@ -5,7 +5,7 @@ import pytest
 from helpers import CASE_A_DIR, CASE_B_DIR, DATASET_DIR, REPO_ROOT, make_event, make_quote
 
 from evidence_timeline.extractors import ExtractionError, ExtractionResult, FakeExtractor
-from evidence_timeline.models import Batch, EventPair, MatchDecision, TimelineRun
+from evidence_timeline.models import Batch, Domain, EventPair, MatchDecision, TimelineRun
 from evidence_timeline.pipeline import run_case
 
 
@@ -17,10 +17,10 @@ class FailingExtractor:
     def __init__(self, failing_batch_ids: set[str]) -> None:
         self.failing_batch_ids = failing_batch_ids
 
-    async def extract_events(self, batch: Batch) -> ExtractionResult:
+    async def extract_events(self, batch: Batch, domain: Domain) -> ExtractionResult:
         if batch.batch_id in self.failing_batch_ids:
             raise ExtractionError("provider down", attempts=3)
-        return await FakeExtractor().extract_events(batch)
+        return await FakeExtractor().extract_events(batch, domain)
 
 
 def test_fake_run_covers_every_line():
@@ -46,12 +46,12 @@ def test_batches_are_processed_at_the_same_time():
             self.running = 0
             self.most_at_once = 0
 
-        async def extract_events(self, batch: Batch) -> ExtractionResult:
+        async def extract_events(self, batch: Batch, domain: Domain) -> ExtractionResult:
             self.running += 1
             self.most_at_once = max(self.most_at_once, self.running)
             await asyncio.sleep(0.01)
             self.running -= 1
-            return await FakeExtractor().extract_events(batch)
+            return await FakeExtractor().extract_events(batch, domain)
 
     extractor = SlowExtractor()
 
@@ -86,7 +86,7 @@ def test_unexpected_errors_are_not_hidden():
     class BrokenExtractor:
         info = FakeExtractor.info
 
-        async def extract_events(self, batch: Batch) -> ExtractionResult:
+        async def extract_events(self, batch: Batch, domain: Domain) -> ExtractionResult:
             raise ZeroDivisionError
 
     with pytest.raises(ZeroDivisionError):
@@ -97,7 +97,7 @@ def test_the_same_event_found_in_two_batches_is_kept_twice():
     class SameEventExtractor:
         info = FakeExtractor.info
 
-        async def extract_events(self, batch: Batch) -> ExtractionResult:
+        async def extract_events(self, batch: Batch, domain: Domain) -> ExtractionResult:
             quote = make_quote(1, "# Birch Clinic: initial assessment", document_id="B01")
             return ExtractionResult(events=[make_event(evidence=[quote])], attempts=1)
 

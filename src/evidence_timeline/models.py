@@ -9,7 +9,6 @@ from typing import Any, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-EventType = Literal["visit", "procedure", "medication_start"]
 EventStatus = Literal["completed", "planned"]
 # exact: one known day | approximate: only a date range | conflicting: sources disagree | unknown: no date
 DatePrecision = Literal["exact", "approximate", "conflicting", "unknown"]
@@ -60,6 +59,20 @@ class ExtractorInfo(BaseModel):
     settings: dict[str, Any]
 
 
+class EventTypeDefinition(BaseModel):
+    name: str  # e.g. "visit"
+    description: str  # finishes the sentence '"visit" for ...', e.g. "visits and assessments"
+
+
+class Domain(BaseModel):
+    """What counts as an event in one dataset. datasets.py reads it from the dataset folder."""
+
+    name: str  # e.g. "clinical"
+    scope: str  # the extraction scope: which events to extract and which to leave out
+    event_types: list[EventTypeDefinition]
+    identifiers: str  # what descriptions should keep, e.g. "body site, clinic or reference codes"
+
+
 class CaseRequest(BaseModel):
     """What one run needs to know before it starts."""
 
@@ -68,13 +81,21 @@ class CaseRequest(BaseModel):
 
 
 class CasePlan(BaseModel):
-    """Everything known before any model is called: the batches, and which extractor will run them."""
+    """Everything known before any model is called: the batches, the domain, and which extractor will run them."""
 
     case_id: str
+    domain: Domain
     extractor: ExtractorInfo
     batches: list[Batch]
     document_sha256: dict[str, str]
     total_lines: int
+
+
+class BatchTask(BaseModel):
+    """One batch and the domain to extract it with. An activity takes one argument, so they travel together."""
+
+    batch: Batch
+    domain: Domain
 
 
 # --- What the LLM must return ------------------------------------------------------
@@ -96,7 +117,7 @@ class EvidenceQuote(BaseModel):
 class ExtractedEvent(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    event_type: EventType
+    event_type: str  # one of the domain's event types; the schema sent to the model lists them
     status: EventStatus
     description: str
     date: dt.date | None
@@ -189,6 +210,7 @@ class TimelineRun(BaseModel):
     run_id: str
     created_at: dt.datetime
     case_id: str
+    domain: str | None = None  # the domain's name; None in runs made before domains existed
     status: Literal["completed", "partial", "failed"]
     notes: list[str]
     extractor: ExtractorInfo

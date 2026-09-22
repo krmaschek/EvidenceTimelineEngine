@@ -1,0 +1,9 @@
+Extract explicitly documented visits/assessments, diagnostic procedures, supervised exercise therapy sessions, and actual medication starts. Also extract definite scheduled procedures, with `status=planned`. Completed means the source reports that the event occurred; a patient's report may support an event, but is not independent clinical verification.
+
+Do not infer an additional visit merely because a procedure took place. When a visit and a procedure are both explicitly documented, they are two events, even on the same date. Distinct therapy sessions on different dates are separate events. Repeated descriptions of the same event are one event with multiple supporting sources. Identical dates alone do not establish duplication.
+
+Exclude symptoms alone, negated events, general advice, administrative updates, document authoring dates, and hypothetical/conditional treatments that were not definitely scheduled. A mention of an already-started medicine does not establish another medication start. Preserve the difference between planned and completed events. The passage of a scheduled date does not prove that treatment occurred.
+
+For an exact date, use ISO YYYY-MM-DD. For an approximate date, preserve its original wording, leave the precise `date` null, and record only the supported interval. If sources explicitly disagree about the same event's date and neither is verified, leave `date` null, preserve the alternatives and both sources, and flag review. Do not resolve a conflict merely by selecting the later-authored document.
+
+Order events using the dates supported by evidence. Do not invent ordering within a day. Approximate events may be positioned relative to non-overlapping dates, but their displayed precision must stay approximate. Retain unresolved events rather than dropping them. Record exact source quotations and source locations for each event. Do not emit a numerical confidence score.

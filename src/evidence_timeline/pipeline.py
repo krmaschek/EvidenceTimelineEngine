@@ -15,6 +15,7 @@ import httpx
 
 from evidence_timeline import merge
 from evidence_timeline.batching import build_batches, check_coverage
+from evidence_timeline.datasets import load_domain
 from evidence_timeline.documents import load_documents
 from evidence_timeline.extractors import EventExtractor, ExtractionError
 from evidence_timeline.merge import EventMatcher
@@ -23,11 +24,12 @@ from evidence_timeline.models import (
     BatchOutcome,
     BatchReport,
     CasePlan,
+    Domain,
     EventPair,
     ExtractorInfo,
     TimelineRun,
 )
-from evidence_timeline.prompts import PROMPT_SHA256
+from evidence_timeline.prompts import prompt_sha256
 from evidence_timeline.timeline import ORDERING_NOTE, build_timeline_events, sort_timeline
 
 NOTES = [
@@ -43,13 +45,18 @@ NOTES = [
 
 
 def plan_case(case_dir: Path, max_chars: int, extractor: ExtractorInfo) -> CasePlan:
-    """Read one case and divide it into batches. No model is called here."""
+    """Read one case and divide it into batches. No model is called here.
+
+    The domain comes from the case's dataset folder, so each case is extracted with
+    its own dataset's definition of an event.
+    """
     case_id = case_dir.name.removeprefix("case_")
     documents = load_documents(case_dir)
     batches = build_batches(case_id, documents, max_chars)
     check_coverage(documents, batches)
     return CasePlan(
         case_id=case_id,
+        domain=load_domain(case_dir),
         extractor=extractor,
         batches=batches,
         document_sha256={document.document_id: document.sha256 for document in documents},
@@ -62,7 +69,7 @@ async def run_case(
 ) -> TimelineRun:
     plan = plan_case(case_dir, max_chars, extractor.info)
 
-    coroutines = [process_batch(batch, extractor) for batch in plan.batches]
+    coroutines = [process_batch(batch, plan.domain, extractor) for batch in plan.batches]
     outcomes = await asyncio.gather(*coroutines)  # results come back in the order of the batches
 
     events = [event for outcome in outcomes for event in outcome.events]
@@ -80,13 +87,13 @@ async def run_case(
     )
 
 
-async def process_batch(batch: Batch, extractor: EventExtractor) -> BatchOutcome:
+async def process_batch(batch: Batch, domain: Domain, extractor: EventExtractor) -> BatchOutcome:
     """Extract one batch.
 
     The extractor retries on its own; if it still fails, the batch is recorded as failed.
     """
     try:
-        result = await extractor.extract_events(batch)
+        result = await extractor.extract_events(batch, domain)
     except ExtractionError as error:
         # Only expected extraction failures are caught. Any other exception is a bug and stops the run.
         failed = BatchReport(
@@ -151,11 +158,12 @@ def build_run(
         run_id=run_id,
         created_at=created_at,
         case_id=plan.case_id,
+        domain=plan.domain.name,
         status=status,
         notes=NOTES,
         extractor=plan.extractor,
         max_chars_per_batch=max_chars,
-        prompt_sha256=PROMPT_SHA256,
+        prompt_sha256=prompt_sha256(plan.domain),
         document_sha256=plan.document_sha256,
         total_lines=plan.total_lines,
         lines_in_successful_batches=lines_in_successful_batches,

@@ -6,7 +6,7 @@ import json
 
 import httpx
 import pytest
-from helpers import make_batch, make_event, make_quote
+from helpers import CLINICAL_DOMAIN, make_batch, make_event, make_quote
 from pydantic import SecretStr
 
 from evidence_timeline.extractors import ExtractionError, PermanentExtractionError
@@ -59,7 +59,7 @@ def test_request_asks_the_configured_model_for_strict_json():
     server = FakeServer(reply())
     extractor, _ = make_extractor(server)
 
-    asyncio.run(extractor.extract_events(BATCH))
+    asyncio.run(extractor.extract_events(BATCH, CLINICAL_DOMAIN))
 
     request = server.requests[0]
     body = json.loads(request.content)
@@ -70,12 +70,17 @@ def test_request_asks_the_configured_model_for_strict_json():
     assert body["provider"] == {"require_parameters": True}
     assert LINE in body["messages"][1]["content"]
 
+    # The schema allows only the domain's event types.
+    schema = body["response_format"]["json_schema"]["schema"]
+    event_type = schema["$defs"]["ExtractedEvent"]["properties"]["event_type"]
+    assert event_type["enum"] == ["visit", "procedure", "medication_start"]
+
 
 def test_other_providers_get_no_openrouter_settings():
     server = FakeServer(reply())
     extractor, _ = make_extractor(server, CONFIG.model_copy(update={"base_url": "http://localhost:8000/v1"}))
 
-    asyncio.run(extractor.extract_events(BATCH))
+    asyncio.run(extractor.extract_events(BATCH, CLINICAL_DOMAIN))
 
     assert str(server.requests[0].url) == "http://localhost:8000/v1/chat/completions"
     assert "provider" not in json.loads(server.requests[0].content)
@@ -84,7 +89,7 @@ def test_other_providers_get_no_openrouter_settings():
 def test_reply_becomes_events_with_model_and_usage():
     extractor, _ = make_extractor(FakeServer(reply()))
 
-    result = asyncio.run(extractor.extract_events(BATCH))
+    result = asyncio.run(extractor.extract_events(BATCH, CLINICAL_DOMAIN))
 
     assert result.events[0].date == dt.date(2025, 1, 6)
     assert (result.attempts, result.model, result.usage) == (1, "vendor/model-x", {"total_tokens": 42})
@@ -101,7 +106,7 @@ def test_temporary_errors_are_retried_with_growing_waits():
     server = FakeServer(httpx.Response(503), httpx.ConnectError("connection reset"), reply())
     extractor, waits = make_extractor(server)
 
-    result = asyncio.run(extractor.extract_events(BATCH))
+    result = asyncio.run(extractor.extract_events(BATCH, CLINICAL_DOMAIN))
 
     assert result.attempts == 3
     assert [int(wait) for wait in waits] == [1, 2]  # the part after the decimal point is random jitter
@@ -118,7 +123,7 @@ def test_slow_answers_time_out_and_are_retried():
 
     extractor, _ = make_extractor(slow_first_answer, CONFIG.model_copy(update={"timeout_seconds": 0.05}))
 
-    result = asyncio.run(extractor.extract_events(BATCH))
+    result = asyncio.run(extractor.extract_events(BATCH, CLINICAL_DOMAIN))
 
     assert result.attempts == 2
 
@@ -128,7 +133,7 @@ def test_retries_stop_after_max_attempts():
     extractor, waits = make_extractor(server)
 
     with pytest.raises(ExtractionError, match="failed after 3 attempts: ConnectError") as error:
-        asyncio.run(extractor.extract_events(BATCH))
+        asyncio.run(extractor.extract_events(BATCH, CLINICAL_DOMAIN))
 
     assert error.value.attempts == 3
     assert len(waits) == 2
@@ -140,7 +145,7 @@ def test_permanent_errors_are_not_retried(status):
     extractor, waits = make_extractor(server)
 
     with pytest.raises(PermanentExtractionError, match=f"HTTP {status}: nope"):
-        asyncio.run(extractor.extract_events(BATCH))
+        asyncio.run(extractor.extract_events(BATCH, CLINICAL_DOMAIN))
 
     assert len(server.requests) == 1
     assert waits == []
@@ -150,7 +155,7 @@ def test_invalid_output_is_retried_with_the_same_request():
     server = FakeServer(reply(content="not json"), reply())
     extractor, _ = make_extractor(server)
 
-    result = asyncio.run(extractor.extract_events(BATCH))
+    result = asyncio.run(extractor.extract_events(BATCH, CLINICAL_DOMAIN))
 
     assert result.attempts == 2
     assert server.requests[0].content == server.requests[1].content
@@ -171,7 +176,7 @@ def test_invalid_output_fails_the_batch_after_max_attempts(bad_reply):
     extractor, _ = make_extractor(server)
 
     with pytest.raises(ExtractionError, match="failed after 3 attempts"):
-        asyncio.run(extractor.extract_events(BATCH))
+        asyncio.run(extractor.extract_events(BATCH, CLINICAL_DOMAIN))
 
     assert len(server.requests) == 3
 
@@ -191,7 +196,7 @@ def test_no_more_than_max_concurrent_requests_run_at_once():
     extractor, _ = make_extractor(busy_server)  # CONFIG allows 2 requests at once
 
     async def extract_six_batches():
-        return await asyncio.gather(*[extractor.extract_events(BATCH) for _ in range(6)])
+        return await asyncio.gather(*[extractor.extract_events(BATCH, CLINICAL_DOMAIN) for _ in range(6)])
 
     results = asyncio.run(extract_six_batches())
 

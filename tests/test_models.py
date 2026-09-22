@@ -77,7 +77,8 @@ def test_date_fields_must_fit_the_precision(changes):
     "changes",
     [
         {"confidence": 0.9},
-        {"event_type": "surgery"},
+        # An unknown event_type is not rejected here: each dataset has its own types, and the
+        # schema sent to the model limits them (see test_llm_extractor).
         {"status": "done"},
         {"date": "6 January 2025"},
         {"evidence": []},

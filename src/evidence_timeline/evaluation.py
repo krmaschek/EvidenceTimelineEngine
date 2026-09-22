@@ -15,7 +15,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from evidence_timeline.models import EventStatus, EventType, TimelineEvent, TimelineRun
+from evidence_timeline.models import EventStatus, TimelineEvent, TimelineRun
 
 NoMatchReason = Literal["duplicate", "wrong_date", "wrong_status", "wrong_type", "not_a_reference_event", "other"]
 Dates = tuple[dt.date | None, tuple[dt.date, dt.date] | None, list[dt.date]]  # exact date, range, alternatives
@@ -33,7 +33,7 @@ class ReferenceEvent(BaseModel):
     """The fields of a gold event that scoring needs. Other fields in the file are ignored."""
 
     event_id: str
-    event_type: EventType
+    event_type: str
     status: EventStatus
     description: str
     date: dt.date | None

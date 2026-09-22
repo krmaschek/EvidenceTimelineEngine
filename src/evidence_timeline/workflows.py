@@ -21,7 +21,9 @@ with workflow.unsafe.imports_passed_through():
         Batch,
         BatchOutcome,
         BatchReport,
+        BatchTask,
         CaseRequest,
+        Domain,
         EventPair,
         Progress,
         Stage,
@@ -39,9 +41,11 @@ LLM_RETRIES = RetryPolicy(
     maximum_attempts=3,
     non_retryable_error_types=["PermanentExtractionError"],  # e.g. a wrong API key
 )
-# Without a policy Temporal retries forever. A missing folder or a bad plan won't fix itself,
-# so these errors fail at once.
-PLAN_RETRIES = RetryPolicy(maximum_attempts=3, non_retryable_error_types=["ValueError", "RuntimeError"])
+# Without a policy Temporal retries forever. A missing folder or file, or a bad plan, won't fix
+# itself, so these errors fail at once.
+PLAN_RETRIES = RetryPolicy(
+    maximum_attempts=3, non_retryable_error_types=["ValueError", "RuntimeError", "FileNotFoundError"]
+)
 
 
 @workflow.defn
@@ -68,7 +72,7 @@ class BuildTimelineWorkflow:
         # Start every batch at once; the worker limits how many actually run.
         self.stage = "extracting"
         self.total_batches = len(plan.batches)
-        coroutines = [self.run_batch(batch) for batch in plan.batches]
+        coroutines = [self.run_batch(batch, plan.domain) for batch in plan.batches]
         outcomes = await asyncio.gather(*coroutines)
 
         # Find duplicates: simple rules pick the pairs worth checking, and the LLM decides each one.
@@ -93,12 +97,12 @@ class BuildTimelineWorkflow:
         self.stage = "done"
         return run
 
-    async def run_batch(self, batch: Batch) -> BatchOutcome:
+    async def run_batch(self, batch: Batch, domain: Domain) -> BatchOutcome:
         """Extract one batch on a worker. If every attempt fails, the batch is recorded as failed."""
         try:
             outcome = await workflow.execute_activity_method(
                 Activities.extract_batch,
-                batch,
+                BatchTask(batch=batch, domain=domain),
                 start_to_close_timeout=BATCH_TIMEOUT,
                 retry_policy=LLM_RETRIES,
             )

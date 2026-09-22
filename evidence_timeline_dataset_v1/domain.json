@@ -1,0 +1,9 @@
+{
+  "name": "clinical",
+  "event_types": [
+    {"name": "visit", "description": "visits and assessments"},
+    {"name": "procedure", "description": "diagnostic procedures and supervised exercise therapy sessions"},
+    {"name": "medication_start", "description": "actual medication starts"}
+  ],
+  "identifiers": "body site, clinic or reference codes"
+}
