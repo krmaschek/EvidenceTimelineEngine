@@ -1,0 +1,73 @@
+{
+  "case_id": "B",
+  "run_id": "8d676e01671142088f92062db9904617",
+  "reviewer": "Claude (review delegated by Krystof; each match checked on type, status, date, cited lines and meaning)",
+  "reference_events": [
+    "B-E01 | visit | completed | 2025-03-04 | Initial visit at Birch Clinic for right ankle pain",
+    "B-E02 | procedure | completed | 2025-03-04 | Right ankle X-ray BX-41",
+    "B-E03 | medication_start | completed | 2025-03-04 | Paracetamol started",
+    "B-E04 | visit | completed | 2025-03-11 | Follow-up visit at Birch Clinic",
+    "B-E05 | procedure | completed | 2025-03-11 | Right ankle ultrasound BU-12",
+    "B-E06 | visit | completed | 2025-03-18 | Assessment at Cedar Therapy",
+    "B-E07 | procedure | completed | 2025-03-18 | Supervised right ankle exercise therapy session BT-01",
+    "B-E08 | procedure | completed | 2025-03-25 | Supervised right ankle exercise therapy session BT-02"
+  ],
+  "decisions": [
+    {
+      "prediction_id": "B-batch-001-e01",
+      "prediction": "visit | completed | 2025-03-04 | Initial visit at Birch Clinic for right ankle pain",
+      "match": "B-E01",
+      "reason": null,
+      "note": ""
+    },
+    {
+      "prediction_id": "B-batch-001-e02",
+      "prediction": "procedure | completed | 2025-03-04 | Right ankle X-ray (imaging reference BX-41)",
+      "match": "B-E02",
+      "reason": null,
+      "note": "merged from 3 records; sources B01:9, B02:8, B03:9 are the reference's"
+    },
+    {
+      "prediction_id": "B-batch-001-e03",
+      "prediction": "medication_start | completed | 2025-03-04 | Started taking paracetamol",
+      "match": "B-E03",
+      "reason": null,
+      "note": "merged from 2 records; sources B01:10, B03:10 are the reference's"
+    },
+    {
+      "prediction_id": "B-batch-003-e03",
+      "prediction": "visit | completed | 2025-03-11 | Follow-up visit at Birch Clinic",
+      "match": "B-E04",
+      "reason": null,
+      "note": "merged from 2 records; sources B03:8, B04:10 are the reference's"
+    },
+    {
+      "prediction_id": "B-batch-003-e04",
+      "prediction": "procedure | completed | 2025-03-11 | Right ankle ultrasound, imaging reference BU-12",
+      "match": "B-E05",
+      "reason": null,
+      "note": ""
+    },
+    {
+      "prediction_id": "B-batch-004-e02",
+      "prediction": "visit | completed | 2025-03-18 | Assessment visit at Cedar Therapy",
+      "match": "B-E06",
+      "reason": null,
+      "note": ""
+    },
+    {
+      "prediction_id": "B-batch-004-e03",
+      "prediction": "procedure | completed | 2025-03-18 | Supervised right ankle exercise therapy session, reference BT-01",
+      "match": "B-E07",
+      "reason": null,
+      "note": "merged from 2 records; sources B04:9, B05:9 are the reference's"
+    },
+    {
+      "prediction_id": "B-batch-005-e02",
+      "prediction": "procedure | completed | 2025-03-25 | Second supervised right ankle exercise therapy session, reference BT-02",
+      "match": "B-E08",
+      "reason": null,
+      "note": "kept apart from BT-01, which is 7 days earlier"
+    }
+  ]
+}

@@ -9,7 +9,7 @@ import pytest
 from helpers import make_batch, make_event, make_quote
 from pydantic import SecretStr
 
-from evidence_timeline.extractors import ExtractionError
+from evidence_timeline.extractors import ExtractionError, PermanentExtractionError
 from evidence_timeline.llm_extractor import LLMConfig, LLMExtractor
 
 CONFIG = LLMConfig(
@@ -139,7 +139,7 @@ def test_permanent_errors_are_not_retried(status):
     server = FakeServer(httpx.Response(status, text="nope"))
     extractor, waits = make_extractor(server)
 
-    with pytest.raises(ExtractionError, match=f"HTTP {status}: nope"):
+    with pytest.raises(PermanentExtractionError, match=f"HTTP {status}: nope"):
         asyncio.run(extractor.extract_events(BATCH))
 
     assert len(server.requests) == 1

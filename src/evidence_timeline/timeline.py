@@ -1,7 +1,7 @@
 """Turn extracted events into timeline events and sort them.
 
-Nothing is merged here: events on the same day stay separate, and the same event
-found in two batches appears twice. Deduplication comes in a later phase.
+Nothing is merged here. Merging happens in merge.py, after the events are built
+and before they are sorted.
 """
 
 import datetime as dt

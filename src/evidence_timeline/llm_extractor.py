@@ -14,7 +14,7 @@ from typing import Any
 import httpx
 from pydantic import BaseModel, SecretStr
 
-from evidence_timeline.extractors import ExtractionError, ExtractionResult
+from evidence_timeline.extractors import ExtractionError, ExtractionResult, PermanentExtractionError
 from evidence_timeline.models import Batch, ExtractionResponse, ExtractorInfo
 from evidence_timeline.prompts import build_messages
 
@@ -104,7 +104,7 @@ class LLMExtractor:
             except httpx.HTTPStatusError as exc:
                 error = f"HTTP {exc.response.status_code}: {exc.response.text[:300]}"
                 if exc.response.status_code not in RETRYABLE_STATUS_CODES:
-                    raise ExtractionError(error, attempt)  # e.g. a wrong API key: retrying will not help
+                    raise PermanentExtractionError(error, attempt)  # e.g. a wrong API key: retrying will not help
 
             except (TimeoutError, httpx.RequestError, ValueError, KeyError, IndexError, TypeError) as exc:
                 # No answer in time, a connection problem, or a reply we cannot read.

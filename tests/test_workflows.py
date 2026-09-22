@@ -17,7 +17,13 @@ from temporalio.testing import WorkflowEnvironment
 from temporalio.worker import Worker
 
 from evidence_timeline.activities import Activities
-from evidence_timeline.extractors import EventExtractor, ExtractionError, ExtractionResult, FakeExtractor
+from evidence_timeline.extractors import (
+    EventExtractor,
+    ExtractionError,
+    ExtractionResult,
+    FakeExtractor,
+    PermanentExtractionError,
+)
 from evidence_timeline.merge import EventMatcher
 from evidence_timeline.models import Batch, CaseRequest, EventPair, MatchDecision, TimelineRun
 from evidence_timeline.worker import TASK_QUEUE
@@ -36,6 +42,19 @@ class FailingExtractor:
         if batch.batch_id in self.failing_batch_ids:
             raise ExtractionError("provider down", attempts=1)
         return await FakeExtractor().extract_events(batch)
+
+
+class WrongKeyExtractor:
+    """Fails every batch with an error that retrying cannot fix, and counts how often it is called."""
+
+    info = FakeExtractor.info
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    async def extract_events(self, batch: Batch) -> ExtractionResult:
+        self.calls += 1
+        raise PermanentExtractionError("HTTP 401: wrong API key", attempts=1)
 
 
 class AlwaysTheSameMatcher:
@@ -100,6 +119,16 @@ def test_a_batch_that_never_succeeds_makes_the_run_partial():
     assert "provider down" in failed.error
     assert failed.lines == ["B03:1-11", "B04:1-10"]
     assert {event.batch_id for event in run.events} == {"B-batch-001", "B-batch-003"}
+
+
+def test_an_error_that_retrying_cannot_fix_is_tried_only_once():
+    extractor = WrongKeyExtractor()
+    run = asyncio.run(run_workflow(extractor, CASE_A_DIR, max_chars=500))  # 4 batches
+
+    assert run.status == "failed"
+    assert extractor.calls == 4  # one call per batch, no retries
+    assert [batch.attempts for batch in run.batches] == [1, 1, 1, 1]
+    assert "wrong API key" in run.batches[0].error
 
 
 def test_a_missing_case_folder_fails_instead_of_retrying_forever():

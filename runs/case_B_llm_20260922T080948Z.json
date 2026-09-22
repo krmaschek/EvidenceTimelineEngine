@@ -1,10 +1,11 @@
 {
-  "run_id": "bf786d9911d9459a9d32500ba1eef929",
-  "created_at": "2026-09-17T16:45:02.173816Z",
+  "run_id": "8d676e01671142088f92062db9904617",
+  "created_at": "2026-09-22T08:09:48.015150Z",
   "case_id": "B",
   "status": "completed",
   "notes": [
-    "PRELIMINARY timeline: duplicates are not merged and conflicts between documents are not detected yet, so the same event can appear more than once.",
+    "Events that more than one document records are merged into one, keeping every quote. Two events are only compared when they are the same type and status and their dates are within 3 days, so the same event recorded much later is not found.",
+    "When merged sources disagree about the day, the event is marked 'conflicting' and every date is kept. The disagreement is reported, not resolved.",
     "An empty citation_errors list means each quote was found at its cited lines. It does not mean the quote supports the event.",
     "Events are sorted by their earliest possible date, then their latest possible date. Events without a date come last. Events with the same dates keep source order (document, line); that order says nothing about the time of day."
   ],
@@ -15,8 +16,8 @@
       "base_url": "https://openrouter.ai/api/v1",
       "temperature": 0.0,
       "max_output_tokens": 8000,
-      "timeout_seconds": 120.0,
-      "max_attempts": 3,
+      "timeout_seconds": 240.0,
+      "max_attempts": 1,
       "max_concurrent_requests": 4
     }
   },
@@ -43,9 +44,9 @@
       "model": "google/gemini-3.8-flash",
       "usage": {
         "prompt_tokens": 1127,
-        "completion_tokens": 1255,
-        "total_tokens": 2382,
-        "cost": 0.0055515,
+        "completion_tokens": 1210,
+        "total_tokens": 2337,
+        "cost": 0.00538275,
         "is_byok": false,
         "prompt_tokens_details": {
           "cached_tokens": 0,
@@ -54,12 +55,12 @@
           "video_tokens": 0
         },
         "cost_details": {
-          "upstream_inference_cost": 0.0055515,
+          "upstream_inference_cost": 0.00538275,
           "upstream_inference_prompt_cost": 0.00084525,
-          "upstream_inference_completions_cost": 0.00470625
+          "upstream_inference_completions_cost": 0.0045375
         },
         "completion_tokens_details": {
-          "reasoning_tokens": 974,
+          "reasoning_tokens": 814,
           "image_tokens": 0,
           "audio_tokens": 0
         }
@@ -76,9 +77,9 @@
       "model": "google/gemini-3.8-flash",
       "usage": {
         "prompt_tokens": 1105,
-        "completion_tokens": 624,
-        "total_tokens": 1729,
-        "cost": 0.00316875,
+        "completion_tokens": 644,
+        "total_tokens": 1749,
+        "cost": 0.00324375,
         "is_byok": false,
         "prompt_tokens_details": {
           "cached_tokens": 0,
@@ -87,12 +88,12 @@
           "video_tokens": 0
         },
         "cost_details": {
-          "upstream_inference_cost": 0.00316875,
+          "upstream_inference_cost": 0.00324375,
           "upstream_inference_prompt_cost": 0.00082875,
-          "upstream_inference_completions_cost": 0.00234
+          "upstream_inference_completions_cost": 0.002415
         },
         "completion_tokens_details": {
-          "reasoning_tokens": 443,
+          "reasoning_tokens": 494,
           "image_tokens": 0,
           "audio_tokens": 0
         }
@@ -109,9 +110,9 @@
       "model": "google/gemini-3.8-flash",
       "usage": {
         "prompt_tokens": 1174,
-        "completion_tokens": 3077,
-        "total_tokens": 4251,
-        "cost": 0.01241925,
+        "completion_tokens": 2736,
+        "total_tokens": 3910,
+        "cost": 0.0111405,
         "is_byok": false,
         "prompt_tokens_details": {
           "cached_tokens": 0,
@@ -120,12 +121,12 @@
           "video_tokens": 0
         },
         "cost_details": {
-          "upstream_inference_cost": 0.01241925,
+          "upstream_inference_cost": 0.0111405,
           "upstream_inference_prompt_cost": 0.0008805,
-          "upstream_inference_completions_cost": 0.01153875
+          "upstream_inference_completions_cost": 0.01026
         },
         "completion_tokens_details": {
-          "reasoning_tokens": 2418,
+          "reasoning_tokens": 2102,
           "image_tokens": 0,
           "audio_tokens": 0
         }
@@ -142,9 +143,9 @@
       "model": "google/gemini-3.8-flash",
       "usage": {
         "prompt_tokens": 1133,
-        "completion_tokens": 1463,
-        "total_tokens": 2596,
-        "cost": 0.006336,
+        "completion_tokens": 1349,
+        "total_tokens": 2482,
+        "cost": 0.0059085,
         "is_byok": false,
         "prompt_tokens_details": {
           "cached_tokens": 0,
@@ -153,12 +154,12 @@
           "video_tokens": 0
         },
         "cost_details": {
-          "upstream_inference_cost": 0.006336,
+          "upstream_inference_cost": 0.0059085,
           "upstream_inference_prompt_cost": 0.00084975,
-          "upstream_inference_completions_cost": 0.00548625
+          "upstream_inference_completions_cost": 0.00505875
         },
         "completion_tokens_details": {
-          "reasoning_tokens": 1029,
+          "reasoning_tokens": 1081,
           "image_tokens": 0,
           "audio_tokens": 0
         }
@@ -175,9 +176,9 @@
       "model": "google/gemini-3.8-flash",
       "usage": {
         "prompt_tokens": 1137,
-        "completion_tokens": 1207,
-        "total_tokens": 2344,
-        "cost": 0.005379,
+        "completion_tokens": 1036,
+        "total_tokens": 2173,
+        "cost": 0.00473775,
         "is_byok": false,
         "prompt_tokens_details": {
           "cached_tokens": 0,
@@ -186,12 +187,12 @@
           "video_tokens": 0
         },
         "cost_details": {
-          "upstream_inference_cost": 0.005379,
+          "upstream_inference_cost": 0.00473775,
           "upstream_inference_prompt_cost": 0.00085275,
-          "upstream_inference_completions_cost": 0.00452625
+          "upstream_inference_completions_cost": 0.003885
         },
         "completion_tokens_details": {
-          "reasoning_tokens": 881,
+          "reasoning_tokens": 734,
           "image_tokens": 0,
           "audio_tokens": 0
         }
@@ -202,7 +203,7 @@
     {
       "event_type": "visit",
       "status": "completed",
-      "description": "Initial visit at Birch Clinic",
+      "description": "Initial visit at Birch Clinic for right ankle pain",
       "date": "2025-03-04",
       "date_precision": "exact",
       "date_earliest": null,
@@ -221,12 +222,13 @@
       "event_id": "B-batch-001-e01",
       "batch_id": "B-batch-001",
       "citation_errors": [],
-      "needs_review": false
+      "needs_review": false,
+      "merged_from": []
     },
     {
       "event_type": "procedure",
       "status": "completed",
-      "description": "Right ankle X-ray (BX-41)",
+      "description": "Right ankle X-ray (imaging reference BX-41)",
       "date": "2025-03-04",
       "date_precision": "exact",
       "date_earliest": null,
@@ -239,13 +241,32 @@
           "line_end": 9,
           "quote": "A right ankle X-ray was performed on 4 March 2025; imaging reference BX-41.",
           "date_text": "4 March 2025"
+        },
+        {
+          "document_id": "B02",
+          "line_start": 8,
+          "line_end": 8,
+          "quote": "This report was issued on 5 March 2025 for the right ankle radiograph performed on 2025-03-04, imaging reference BX-41.",
+          "date_text": "2025-03-04"
+        },
+        {
+          "document_id": "B03",
+          "line_start": 9,
+          "line_end": 9,
+          "quote": "The prior right ankle X-ray, imaging reference BX-41, was performed on 4 March 2025.",
+          "date_text": "4 March 2025"
         }
       ],
       "review_reasons": [],
       "event_id": "B-batch-001-e02",
       "batch_id": "B-batch-001",
       "citation_errors": [],
-      "needs_review": false
+      "needs_review": false,
+      "merged_from": [
+        "B-batch-001-e02",
+        "B-batch-002-e01",
+        "B-batch-003-e01"
+      ]
     },
     {
       "event_type": "medication_start",
@@ -263,72 +284,7 @@
           "line_end": 10,
           "quote": "Patient B started taking paracetamol on 4 March 2025.",
           "date_text": "4 March 2025"
-        }
-      ],
-      "review_reasons": [],
-      "event_id": "B-batch-001-e03",
-      "batch_id": "B-batch-001",
-      "citation_errors": [],
-      "needs_review": false
-    },
-    {
-      "event_type": "procedure",
-      "status": "completed",
-      "description": "Right ankle radiograph, imaging reference BX-41",
-      "date": "2025-03-04",
-      "date_precision": "exact",
-      "date_earliest": null,
-      "date_latest": null,
-      "alternative_dates": [],
-      "evidence": [
-        {
-          "document_id": "B02",
-          "line_start": 8,
-          "line_end": 8,
-          "quote": "This report was issued on 5 March 2025 for the right ankle radiograph performed on 2025-03-04, imaging reference BX-41.",
-          "date_text": "2025-03-04"
-        }
-      ],
-      "review_reasons": [],
-      "event_id": "B-batch-002-e01",
-      "batch_id": "B-batch-002",
-      "citation_errors": [],
-      "needs_review": false
-    },
-    {
-      "event_type": "procedure",
-      "status": "completed",
-      "description": "Right ankle X-ray, imaging reference BX-41",
-      "date": "2025-03-04",
-      "date_precision": "exact",
-      "date_earliest": null,
-      "date_latest": null,
-      "alternative_dates": [],
-      "evidence": [
-        {
-          "document_id": "B03",
-          "line_start": 9,
-          "line_end": 9,
-          "quote": "The prior right ankle X-ray, imaging reference BX-41, was performed on 4 March 2025.",
-          "date_text": "4 March 2025"
-        }
-      ],
-      "review_reasons": [],
-      "event_id": "B-batch-003-e01",
-      "batch_id": "B-batch-003",
-      "citation_errors": [],
-      "needs_review": false
-    },
-    {
-      "event_type": "medication_start",
-      "status": "completed",
-      "description": "Start of paracetamol",
-      "date": "2025-03-04",
-      "date_precision": "exact",
-      "date_earliest": null,
-      "date_latest": null,
-      "alternative_dates": [],
-      "evidence": [
+        },
         {
           "document_id": "B03",
           "line_start": 10,
@@ -338,10 +294,14 @@
         }
       ],
       "review_reasons": [],
-      "event_id": "B-batch-003-e02",
-      "batch_id": "B-batch-003",
+      "event_id": "B-batch-001-e03",
+      "batch_id": "B-batch-001",
       "citation_errors": [],
-      "needs_review": false
+      "needs_review": false,
+      "merged_from": [
+        "B-batch-001-e03",
+        "B-batch-003-e02"
+      ]
     },
     {
       "event_type": "visit",
@@ -359,13 +319,24 @@
           "line_end": 8,
           "quote": "Patient B attended a follow-up visit at Birch Clinic on 11 March 2025.",
           "date_text": "11 March 2025"
+        },
+        {
+          "document_id": "B04",
+          "line_start": 10,
+          "line_end": 10,
+          "quote": "The referral history records a follow-up visit at Birch Clinic on 11 March 2025.",
+          "date_text": "11 March 2025"
         }
       ],
       "review_reasons": [],
       "event_id": "B-batch-003-e03",
       "batch_id": "B-batch-003",
       "citation_errors": [],
-      "needs_review": false
+      "needs_review": false,
+      "merged_from": [
+        "B-batch-003-e03",
+        "B-batch-004-e01"
+      ]
     },
     {
       "event_type": "procedure",
@@ -389,31 +360,8 @@
       "event_id": "B-batch-003-e04",
       "batch_id": "B-batch-003",
       "citation_errors": [],
-      "needs_review": false
-    },
-    {
-      "event_type": "visit",
-      "status": "completed",
-      "description": "Follow-up visit at Birch Clinic",
-      "date": "2025-03-11",
-      "date_precision": "exact",
-      "date_earliest": null,
-      "date_latest": null,
-      "alternative_dates": [],
-      "evidence": [
-        {
-          "document_id": "B04",
-          "line_start": 10,
-          "line_end": 10,
-          "quote": "The referral history records a follow-up visit at Birch Clinic on 11 March 2025.",
-          "date_text": "11 March 2025"
-        }
-      ],
-      "review_reasons": [],
-      "event_id": "B-batch-004-e01",
-      "batch_id": "B-batch-004",
-      "citation_errors": [],
-      "needs_review": false
+      "needs_review": false,
+      "merged_from": []
     },
     {
       "event_type": "visit",
@@ -437,12 +385,13 @@
       "event_id": "B-batch-004-e02",
       "batch_id": "B-batch-004",
       "citation_errors": [],
-      "needs_review": false
+      "needs_review": false,
+      "merged_from": []
     },
     {
       "event_type": "procedure",
       "status": "completed",
-      "description": "Supervised right ankle exercise therapy session (session reference BT-01)",
+      "description": "Supervised right ankle exercise therapy session, reference BT-01",
       "date": "2025-03-18",
       "date_precision": "exact",
       "date_earliest": null,
@@ -455,24 +404,7 @@
           "line_end": 9,
           "quote": "A supervised right ankle exercise therapy session was completed on 18 March 2025, session reference BT-01.",
           "date_text": "18 March 2025"
-        }
-      ],
-      "review_reasons": [],
-      "event_id": "B-batch-004-e03",
-      "batch_id": "B-batch-004",
-      "citation_errors": [],
-      "needs_review": false
-    },
-    {
-      "event_type": "procedure",
-      "status": "completed",
-      "description": "Supervised right ankle exercise therapy session, BT-01",
-      "date": "2025-03-18",
-      "date_precision": "exact",
-      "date_earliest": null,
-      "date_latest": null,
-      "alternative_dates": [],
-      "evidence": [
+        },
         {
           "document_id": "B05",
           "line_start": 9,
@@ -482,15 +414,19 @@
         }
       ],
       "review_reasons": [],
-      "event_id": "B-batch-005-e01",
-      "batch_id": "B-batch-005",
+      "event_id": "B-batch-004-e03",
+      "batch_id": "B-batch-004",
       "citation_errors": [],
-      "needs_review": false
+      "needs_review": false,
+      "merged_from": [
+        "B-batch-004-e03",
+        "B-batch-005-e01"
+      ]
     },
     {
       "event_type": "procedure",
       "status": "completed",
-      "description": "Second supervised right ankle exercise therapy session, session reference BT-02",
+      "description": "Second supervised right ankle exercise therapy session, reference BT-02",
       "date": "2025-03-25",
       "date_precision": "exact",
       "date_earliest": null,
@@ -509,7 +445,8 @@
       "event_id": "B-batch-005-e02",
       "batch_id": "B-batch-005",
       "citation_errors": [],
-      "needs_review": false
+      "needs_review": false,
+      "merged_from": []
     }
   ]
 }

@@ -19,6 +19,10 @@ class ExtractionError(Exception):
         self.attempts = attempts
 
 
+class PermanentExtractionError(ExtractionError):
+    """Retrying cannot help, for example with a wrong API key. Temporal is told not to retry it."""
+
+
 class ExtractionResult(BaseModel):
     events: list[ExtractedEvent]
     attempts: int

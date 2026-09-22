@@ -10,7 +10,7 @@ from datetime import timedelta
 
 from temporalio import workflow
 from temporalio.common import RetryPolicy
-from temporalio.exceptions import ActivityError
+from temporalio.exceptions import ActivityError, RetryState
 
 # Let the sandbox reuse these modules instead of re-importing them for every run;
 # they have no side effects on import.
@@ -35,6 +35,7 @@ LLM_RETRIES = RetryPolicy(
     initial_interval=timedelta(seconds=1),
     backoff_coefficient=2.0,
     maximum_attempts=3,
+    non_retryable_error_types=["PermanentExtractionError"],  # e.g. a wrong API key
 )
 # Without a policy Temporal retries forever. A missing folder or a bad plan won't fix itself,
 # so these errors fail at once.
@@ -84,12 +85,16 @@ class BuildTimelineWorkflow:
                 retry_policy=LLM_RETRIES,
             )
         except ActivityError as error:
-            # Out of attempts. The other batches carry on and the run ends up "partial".
+            # Out of attempts, or an error that retrying cannot fix. The other batches carry on
+            # and the run ends up "partial".
+            attempts = LLM_RETRIES.maximum_attempts
+            if error.retry_state == RetryState.NON_RETRYABLE_FAILURE:
+                attempts = 1  # a permanent error, such as a wrong API key, fails on the first try
             failed = BatchReport(
                 batch_id=batch.batch_id,
                 lines=batch.line_labels(),
                 status="failed",
-                attempts=LLM_RETRIES.maximum_attempts,
+                attempts=attempts,
                 error=str(error.cause),
             )
             return BatchOutcome(report=failed, events=[])
