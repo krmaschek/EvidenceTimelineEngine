@@ -17,7 +17,7 @@ from pydantic import BaseModel
 
 from evidence_timeline.models import EventStatus, TimelineEvent, TimelineRun
 
-NoMatchReason = Literal["duplicate", "wrong_date", "wrong_status", "wrong_type", "not_a_reference_event", "other"]
+NoMatchReason = Literal["duplicate", "wrong_date", "wrong_status", "not_a_reference_event", "other"]
 Dates = tuple[dt.date | None, tuple[dt.date, dt.date] | None, list[dt.date]]  # exact date, range, alternatives
 
 
@@ -27,6 +27,13 @@ Dates = tuple[dt.date | None, tuple[dt.date, dt.date] | None, list[dt.date]]  # 
 class DateRange(BaseModel):
     start: dt.date
     end: dt.date
+
+
+class ReferenceSource(BaseModel):
+    """Where a gold event is written. Shown to the reviewer; not scored."""
+
+    document_id: str
+    line_start: int
 
 
 class ReferenceEvent(BaseModel):
@@ -39,6 +46,8 @@ class ReferenceEvent(BaseModel):
     date: dt.date | None
     date_interval: DateRange | None
     alternative_dates: list[dt.date]
+    date_scored: bool = True  # False when the gold wording is too vague to turn into a date
+    sources: list[ReferenceSource]
 
 
 class ReferenceCase(BaseModel):
@@ -88,6 +97,7 @@ class CaseResult(BaseModel):
     fake_extractor: bool
     all_events: Score
     completed_events: Score
+    type_right: int  # matched events that also have the reference's event type
     no_match_reasons: dict[str, int]
     missed_references: list[str]
     quotes: int
@@ -132,33 +142,48 @@ def describe_dates(dates: Dates) -> str:
     return "no date"
 
 
+def describe_reference_date(event: ReferenceEvent) -> str:
+    if not event.date_scored:
+        return "date not scored"
+    return describe_dates(reference_dates(event))
+
+
 def create_review_template(run: TimelineRun, reference: ReferenceCase) -> Review:
-    """A review with every decision left empty. The reviewer fills in each one."""
-    return Review(
-        case_id=run.case_id,
-        run_id=run.run_id,
-        reference_events=[
-            f"{e.event_id} | {e.event_type} | {e.status} | {describe_dates(reference_dates(e))} | {e.description}"
-            for e in reference.events
-        ],
-        decisions=[
-            Decision(
-                prediction_id=e.event_id,
-                prediction=f"{e.event_type} | {e.status} | {describe_dates(prediction_dates(e))} | {e.description}",
-            )
-            for e in run.events
-        ],
-    )
+    """A review with every decision left empty. The reviewer fills in each one.
+
+    Each summary starts with where the event is written, e.g. "A02:8", because a
+    prediction and its gold event are usually on the same line.
+    """
+    reference_events = []
+    for event in reference.events:
+        source = event.sources[0]
+        date = describe_reference_date(event)
+        reference_events.append(
+            f"{event.event_id} | {source.document_id}:{source.line_start} | {event.event_type} | {event.status} | "
+            f"{date} | {event.description}"
+        )
+
+    decisions = []
+    for event in run.events:
+        quote = event.evidence[0]
+        date = describe_dates(prediction_dates(event))
+        summary = f"{quote.document_id}:{quote.line_start} | {event.event_type} | {event.status} | {date} | {event.description}"
+        decisions.append(Decision(prediction_id=event.event_id, prediction=summary))
+
+    return Review(case_id=run.case_id, run_id=run.run_id, reference_events=reference_events, decisions=decisions)
 
 
 def rule_problems(prediction: TimelineEvent, reference: ReferenceEvent) -> list[str]:
-    """The dataset's matching rules that can be checked without judging wording."""
+    """The dataset's matching rules that can be checked without judging wording.
+
+    The event type is not one of them. It is scored on its own, so a found event
+    with the wrong type is not also counted as a false positive and a miss.
+    """
     problems: list[str] = []
-    if prediction.event_type != reference.event_type:
-        problems.append(f"event type: expected {reference.event_type}, got {prediction.event_type}")
     if prediction.status != reference.status:
         problems.append(f"status: expected {reference.status}, got {prediction.status}")
-    if prediction_dates(prediction) != reference_dates(reference):
+    # An unscored gold date is not compared, so any predicted date can match it.
+    if reference.date_scored and prediction_dates(prediction) != reference_dates(reference):
         expected = describe_dates(reference_dates(reference))
         predicted = describe_dates(prediction_dates(prediction))
         problems.append(f"date: expected {expected}, got {predicted}")
@@ -196,7 +221,12 @@ def evaluate_case(run: TimelineRun, reference: ReferenceCase, review: Review) ->
     if problems:
         raise ValueError("The review cannot be scored:\n- " + "\n- ".join(problems))
 
-    matched = {d.match for d in review.decisions if d.match is not None}
+    predictions = {event.event_id: event for event in run.events}
+    references = {event.event_id: event for event in reference.events}
+    matches = [d for d in review.decisions if d.match is not None]
+    type_right = sum(predictions[d.prediction_id].event_type == references[d.match].event_type for d in matches)
+
+    matched = {d.match for d in matches}
     completed = {e.event_id for e in reference.events if e.status == "completed"}
     return CaseResult(
         case_id=run.case_id,
@@ -209,6 +239,7 @@ def evaluate_case(run: TimelineRun, reference: ReferenceCase, review: Review) ->
             references=len(completed),
             matched=len(matched & completed),
         ),
+        type_right=type_right,
         no_match_reasons=dict(Counter(d.reason for d in review.decisions if d.reason is not None)),
         missed_references=[f"{e.event_id} ({e.description})" for e in reference.events if e.event_id not in matched],
         quotes=sum(len(e.evidence) for e in run.events),
@@ -227,6 +258,7 @@ def format_results(results: list[CaseResult]) -> str:
         lines += [
             f"  all events:       {format_score(result.all_events)}",
             f"  completed events: {format_score(result.completed_events)}",
+            f"  event type right: {format_type_right(result.type_right, result.all_events.matched)}",
             f"  no-match reasons: {result.no_match_reasons or 'none'}",
             f"  missed references: {', '.join(result.missed_references) or 'none'}",
             f"  citation check (not part of the scores): {result.failed_citations} of {result.quotes} quotes failed",
@@ -235,10 +267,12 @@ def format_results(results: list[CaseResult]) -> str:
 
     all_events = add_scores([result.all_events for result in results])
     completed_events = add_scores([result.completed_events for result in results])
+    type_right = sum(result.type_right for result in results)
     lines += [
         "All cases together",
         f"  all events:       {format_score(all_events)}",
         f"  completed events: {format_score(completed_events)}",
+        f"  event type right: {format_type_right(type_right, all_events.matched)}",
     ]
     return "\n".join(lines)
 
@@ -257,6 +291,11 @@ def format_score(score: Score) -> str:
         f"{score.references - score.matched} missed, "
         f"precision {percent(score.precision)}, recall {percent(score.recall)}"
     )
+
+
+def format_type_right(type_right: int, matched: int) -> str:
+    share = type_right / matched if matched else None
+    return f"{type_right} of {matched} matched events ({percent(share)})"
 
 
 def percent(value: float | None) -> str:

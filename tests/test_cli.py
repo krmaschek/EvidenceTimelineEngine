@@ -1,5 +1,5 @@
 import pytest
-from helpers import CASE_A_DIR, REPO_ROOT
+from helpers import CASE_A_DIR, DATASET_DIR, REPO_ROOT
 
 from evidence_timeline.cli import main
 from evidence_timeline.models import TimelineRun
@@ -7,7 +7,7 @@ from evidence_timeline.models import TimelineRun
 
 @pytest.fixture(autouse=True)
 def repo_root_without_credentials(monkeypatch):
-    monkeypatch.chdir(REPO_ROOT)  # the CLI finds the answer keys relative to the repository root
+    monkeypatch.chdir(REPO_ROOT)  # relative paths such as runs/ stay inside the repository
     monkeypatch.delenv("LLM_API_KEY", raising=False)
     monkeypatch.delenv("LLM_MODEL", raising=False)
     monkeypatch.delenv("DATABASE_URL", raising=False)  # a test must not write into a real database
@@ -32,9 +32,11 @@ def test_review_template_and_evaluate(tmp_path, capsys):
     review_file = tmp_path / "review.json"
     main(["extract", str(CASE_A_DIR), "--extractor", "fake", "--output", str(run_file)])
 
-    assert main(["review-template", str(run_file), "--output", str(review_file)]) == 0
+    template = ["review-template", str(run_file), "--dataset", str(DATASET_DIR), "--output", str(review_file)]
+    assert main(template) == 0
     # An existing review is never overwritten.
-    assert main(["review-template", str(run_file), "--output", str(review_file)]) == 1
+    assert main(template) == 1
     # Fake runs are not scored unless explicitly allowed.
-    assert main(["evaluate", "--run", str(run_file), "--review", str(review_file)]) == 1
+    evaluate = ["evaluate", "--dataset", str(DATASET_DIR), "--run", str(run_file), "--review", str(review_file)]
+    assert main(evaluate) == 1
     assert "fake-extractor run" in capsys.readouterr().err

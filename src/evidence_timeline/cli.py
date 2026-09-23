@@ -33,8 +33,6 @@ from evidence_timeline.storage import save_run
 from evidence_timeline.worker import DEFAULT_ADDRESS, TASK_QUEUE, connect, run_worker
 from evidence_timeline.workflows import BATCH_TIMEOUT, BuildTimelineWorkflow
 
-GOLD_DIR = Path("evidence_timeline_dataset_v1/gold")
-
 
 def extract(args: argparse.Namespace) -> int:
     run = asyncio.run(run_extraction(args))
@@ -149,7 +147,8 @@ def review_template(args: argparse.Namespace) -> int:
     if args.output.exists():
         raise ValueError(f"{args.output} already exists; delete it first if you really want a new review")
     run = load_run(args.run)
-    review = create_review_template(run, load_reference(GOLD_DIR, run.case_id))
+    reference = load_reference(args.dataset / "gold", run.case_id)
+    review = create_review_template(run, reference)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(review.model_dump_json(indent=2), encoding="utf-8", newline="\n")
     print(f"Wrote {args.output}. Fill in 'reviewer' and, for every decision, 'match' or 'reason'.")
@@ -164,7 +163,8 @@ def evaluate(args: argparse.Namespace) -> int:
         run = load_run(run_path)
         if run.extractor.kind == "fake" and not args.allow_fake:
             raise ValueError(f"{run_path} is a fake-extractor run; use --allow-fake to test the evaluator with it")
-        results.append(evaluate_case(run, load_reference(GOLD_DIR, run.case_id), load_review(review_path)))
+        reference = load_reference(args.dataset / "gold", run.case_id)
+        results.append(evaluate_case(run, reference, load_review(review_path)))
     print(format_results(results))
     return 0
 
@@ -178,7 +178,7 @@ def main(argv: list[str] | None = None) -> int:
     extract_parser.add_argument("--extractor", choices=["fake", "llm"], required=True)
     extract_parser.add_argument("--output", type=Path, help="default: runs/case_<id>_<extractor>_<time>.json")
     extract_parser.add_argument("--max-chars", type=int, default=20_000, help="characters per batch")
-    extract_parser.add_argument("--timeout", type=float, default=120, help="seconds allowed per LLM request")
+    extract_parser.add_argument("--timeout", type=float, default=300, help="seconds allowed per LLM request")
     extract_parser.add_argument("--max-attempts", type=int, default=3, help="tries per batch")
     extract_parser.add_argument("--max-concurrent", type=int, default=4, help="LLM requests running at the same time")
     extract_parser.add_argument("--database-url", help="default: DATABASE_URL; without it the run is only saved as JSON")
@@ -200,10 +200,12 @@ def main(argv: list[str] | None = None) -> int:
 
     template_parser = commands.add_parser("review-template", help="write an empty review file for a run")
     template_parser.add_argument("run", type=Path)
+    template_parser.add_argument("--dataset", type=Path, required=True, help="dataset folder with the gold answers")
     template_parser.add_argument("--output", type=Path, required=True)
     template_parser.set_defaults(handler=review_template)
 
     evaluate_parser = commands.add_parser("evaluate", help="score runs using their review files")
+    evaluate_parser.add_argument("--dataset", type=Path, required=True, help="dataset folder with the gold answers")
     evaluate_parser.add_argument("--run", type=Path, action="append", required=True)
     evaluate_parser.add_argument("--review", type=Path, action="append", required=True)
     evaluate_parser.add_argument("--allow-fake", action="store_true")
