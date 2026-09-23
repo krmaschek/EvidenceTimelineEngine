@@ -20,7 +20,9 @@ from evidence_timeline.prompts import build_messages
 
 DEFAULT_BASE_URL = "https://openrouter.ai/api/v1"
 TEMPERATURE = 0.0
-MAX_OUTPUT_TOKENS = 8_000
+# A ceiling, not a cost: only the tokens used are paid for. Reasoning models count their
+# hidden thinking against it too, which can take more than half of it on a dense batch.
+MAX_OUTPUT_TOKENS = 32_000
 # Worth retrying: timeout, rate limit and temporary server problems.
 RETRYABLE_STATUS_CODES = {408, 429, 500, 502, 503, 504}
 
@@ -95,7 +97,12 @@ class LLMExtractor:
                 response.raise_for_status()
 
                 reply = response.json()
-                answer = reply["choices"][0]["message"]["content"]
+                choice = reply["choices"][0]
+                if choice.get("finish_reason") == "length":
+                    # The same request would be cut off again, so retrying only costs money.
+                    message = f"answer cut off at the output limit of {MAX_OUTPUT_TOKENS} tokens"
+                    raise PermanentExtractionError(message, attempt)
+                answer = choice["message"]["content"]
                 events = ExtractionResponse.model_validate_json(answer).events
                 return ExtractionResult(
                     events=events, attempts=attempt, model=reply.get("model"), usage=reply.get("usage")

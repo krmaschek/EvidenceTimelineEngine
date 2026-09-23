@@ -151,6 +151,18 @@ def test_permanent_errors_are_not_retried(status):
     assert waits == []
 
 
+def test_an_answer_cut_off_at_the_output_limit_is_not_retried():
+    cut_off = {"choices": [{"message": {"content": '{"events": [{"event_type": "vis'}, "finish_reason": "length"}]}
+    server = FakeServer(httpx.Response(200, json=cut_off))
+    extractor, waits = make_extractor(server)
+
+    with pytest.raises(PermanentExtractionError, match="answer cut off at the output limit"):
+        asyncio.run(extractor.extract_events(BATCH, CLINICAL_DOMAIN))
+
+    assert len(server.requests) == 1
+    assert waits == []
+
+
 def test_invalid_output_is_retried_with_the_same_request():
     server = FakeServer(reply(content="not json"), reply())
     extractor, _ = make_extractor(server)
