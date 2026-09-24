@@ -125,4 +125,5 @@ def test_a_worker_with_a_matcher_merges_what_it_confirms():
 
     assert len(run.events) == 1
     assert len(run.events[0].merged_from) == 4
+    assert len(run.pair_decisions) == 6  # every pair of the four events, each with its answer
     assert [quote.document_id for quote in run.events[0].evidence] == ["A01", "A02", "A03", "A04"]

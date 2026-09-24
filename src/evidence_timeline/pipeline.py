@@ -1,7 +1,7 @@
 """Pipeline for one case: documents -> batches -> LLM -> checks -> merge -> sorted timeline.
 
 The CLI and the Temporal workflow share `plan_case` and `build_run`. The rest is the
-CLI's way of running a case without Temporal: `process_batch` and `confirm_pair`
+CLI's way of running a case without Temporal: `process_batch` and `decide_pair`
 follow the same rules as the workflow's `run_batch` and `match_pair`.
 """
 
@@ -27,6 +27,7 @@ from evidence_timeline.models import (
     Domain,
     EventPair,
     ExtractorInfo,
+    PairDecision,
     TimelineRun,
 )
 from evidence_timeline.prompts import prompt_sha256
@@ -73,14 +74,14 @@ async def run_case(
     outcomes = await asyncio.gather(*coroutines)  # results come back in the order of the batches
 
     events = [event for outcome in outcomes for event in outcome.events]
-    questions = [confirm_pair(pair, matcher) for pair in merge.candidates(events)]
+    questions = [decide_pair(pair, matcher) for pair in merge.candidates(events)]
     answers = await asyncio.gather(*questions)
-    confirmed_pairs = [pair for pair in answers if pair is not None]
+    decisions = [decision for decision in answers if decision is not None]
 
     return build_run(
         plan,
         outcomes,
-        confirmed_pairs,
+        decisions,
         max_chars,
         run_id=uuid.uuid4().hex,
         created_at=dt.datetime.now(dt.UTC),
@@ -116,21 +117,21 @@ async def process_batch(batch: Batch, domain: Domain, extractor: EventExtractor)
     return BatchOutcome(report=succeeded, events=build_timeline_events(batch, result.events))
 
 
-async def confirm_pair(pair: EventPair, matcher: EventMatcher | None) -> EventPair | None:
-    """Ask whether two events are the same. None means they stay separate."""
+async def decide_pair(pair: EventPair, matcher: EventMatcher | None) -> PairDecision | None:
+    """Ask whether two events are the same. None means there is no answer, so they stay separate."""
     if matcher is None:  # no matcher (a fake run), so nothing is merged
         return None
     try:
         decision = await matcher.is_same(pair)
     except (TimeoutError, httpx.HTTPError, ValueError, KeyError, IndexError):
         return None  # could not decide: a duplicate is better than a wrong merge
-    return pair if decision.same_event else None
+    return PairDecision(a=pair.a.event_id, b=pair.b.event_id, same_event=decision.same_event, reason=decision.reason)
 
 
 def build_run(
     plan: CasePlan,
     outcomes: list[BatchOutcome],
-    confirmed_pairs: list[EventPair],
+    decisions: list[PairDecision],
     max_chars: int,
     run_id: str,
     created_at: dt.datetime,
@@ -139,7 +140,7 @@ def build_run(
     must get them from Temporal."""
     reports = [outcome.report for outcome in outcomes]
     events = [event for outcome in outcomes for event in outcome.events]
-    merged = merge.merge_events(events, confirmed_pairs)
+    merged = merge.merge_events(events, decisions)
 
     lines_in_successful_batches = sum(
         batch.line_count for batch, report in zip(plan.batches, reports) if report.status == "succeeded"
@@ -169,4 +170,5 @@ def build_run(
         lines_in_successful_batches=lines_in_successful_batches,
         batches=reports,
         events=sort_timeline(merged),
+        pair_decisions=decisions,
     )

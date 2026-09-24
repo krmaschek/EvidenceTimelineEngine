@@ -25,6 +25,7 @@ with workflow.unsafe.imports_passed_through():
         CaseRequest,
         Domain,
         EventPair,
+        PairDecision,
         Progress,
         Stage,
         TimelineRun,
@@ -80,12 +81,12 @@ class BuildTimelineWorkflow:
         events = [event for outcome in outcomes for event in outcome.events]
         questions = [self.match_pair(pair) for pair in merge.candidates(events)]
         answers = await asyncio.gather(*questions)
-        confirmed_pairs = [pair for pair in answers if pair is not None]
+        decisions = [decision for decision in answers if decision is not None]
 
         run = build_run(
             plan,
             outcomes,
-            confirmed_pairs,
+            decisions,
             request.max_chars,
             run_id=workflow.uuid4().hex,  # from Temporal, so a replay produces the same run
             created_at=workflow.now(),
@@ -124,8 +125,8 @@ class BuildTimelineWorkflow:
         self.finished_batches += 1  # succeeded or failed, this batch is no longer running
         return outcome
 
-    async def match_pair(self, pair: EventPair) -> EventPair | None:
-        """Ask a worker whether two events are the same. None means they stay separate."""
+    async def match_pair(self, pair: EventPair) -> PairDecision | None:
+        """Ask a worker whether two events are the same. None means there is no answer, so they stay separate."""
         try:
             decision = await workflow.execute_activity_method(
                 Activities.match_pair,
@@ -136,4 +137,4 @@ class BuildTimelineWorkflow:
         except ActivityError:
             # A pair we could not decide is left alone. A duplicate is better than a wrong merge.
             return None
-        return pair if decision.same_event else None
+        return PairDecision(a=pair.a.event_id, b=pair.b.event_id, same_event=decision.same_event, reason=decision.reason)

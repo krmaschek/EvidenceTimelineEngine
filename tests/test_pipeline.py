@@ -119,6 +119,7 @@ def test_a_matcher_that_times_out_leaves_the_events_separate():
     assert run.status == "completed"
     assert len(run.events) == 4
     assert all(event.merged_from == [] for event in run.events)
+    assert run.pair_decisions == []  # a question without an answer is not recorded
 
 
 def test_extraction_code_never_imports_the_evaluator():

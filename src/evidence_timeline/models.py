@@ -189,6 +189,15 @@ class MatchDecision(BaseModel):
     reason: str
 
 
+class PairDecision(BaseModel):
+    """The matcher's answer to one pair, kept in the run so every merge can be explained."""
+
+    a: str  # event_id
+    b: str  # event_id
+    same_event: bool
+    reason: str
+
+
 class BatchReport(BaseModel):
     batch_id: str
     lines: list[str]  # e.g. ["A01:1-11", "A02:1-10"]
@@ -221,6 +230,7 @@ class TimelineRun(BaseModel):
     lines_in_successful_batches: int
     batches: list[BatchReport]
     events: list[TimelineEvent]
+    pair_decisions: list[PairDecision] = []  # empty in fake runs and in runs made before they were kept
 
 
 class Progress(BaseModel):

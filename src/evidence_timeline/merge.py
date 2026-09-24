@@ -2,15 +2,15 @@
 
 Each batch is extracted on its own, so an event mentioned in three documents comes
 back three times. `candidates` picks the pairs worth checking, and `merge_events`
-merges the pairs that were confirmed. The confirming (usually by an LLM) happens
-outside, so this module stays pure and easy to test.
+applies the answers. The answering (usually by an LLM) happens outside, so this
+module stays pure and easy to test.
 """
 
 import datetime as dt
 import itertools
 from typing import Protocol
 
-from evidence_timeline.models import EventPair, MatchDecision, TimelineEvent
+from evidence_timeline.models import EventPair, MatchDecision, PairDecision, TimelineEvent
 from evidence_timeline.timeline import DATE_REVIEW_REASONS, date_range
 
 # How many days apart two records of the same event may be. Wide enough for sources that
@@ -47,20 +47,27 @@ def dates_are_far_apart(first: TimelineEvent, second: TimelineEvent) -> bool:
     return first_days[0] - WINDOW > second_days[1] or second_days[0] - WINDOW > first_days[1]
 
 
-def merge_events(events: list[TimelineEvent], confirmed_pairs: list[EventPair]) -> list[TimelineEvent]:
-    """Apply the confirmed pairs. Events that were not linked come back unchanged."""
-    return [merge_group(group) for group in group_events(events, confirmed_pairs)]
+def merge_events(events: list[TimelineEvent], decisions: list[PairDecision]) -> list[TimelineEvent]:
+    """Apply the matcher's answers. Events that were not linked come back unchanged."""
+    return [merge_group(group) for group in group_events(events, decisions)]
 
 
-def group_events(events: list[TimelineEvent], confirmed_pairs: list[EventPair]) -> list[list[TimelineEvent]]:
-    """Put events that a confirmed pair links into the same group.
+def group_events(events: list[TimelineEvent], decisions: list[PairDecision]) -> list[list[TimelineEvent]]:
+    """Put events that a "same" answer links into the same group.
 
     Linking is followed through: if A goes with B and B goes with C, all three end up
-    together, even though nobody was asked about A and C.
+    together, unless the matcher said A and C are different. Without that check, one record
+    that mentions two events ("notified by email, and answered thirteen minutes later")
+    would chain them into one.
     """
     group_of = {event.event_id: number for number, event in enumerate(events)}
-    for pair in confirmed_pairs:
-        keep, replace = sorted((group_of[pair.a.event_id], group_of[pair.b.event_id]))
+    different = [(decision.a, decision.b) for decision in decisions if not decision.same_event]
+    for decision in decisions:
+        if not decision.same_event:
+            continue
+        keep, replace = sorted((group_of[decision.a], group_of[decision.b]))
+        if any({group_of[a], group_of[b]} == {keep, replace} for a, b in different):
+            continue  # a member of one group was said to differ from a member of the other
         for event_id, number in group_of.items():
             if number == replace:
                 group_of[event_id] = keep
