@@ -34,7 +34,7 @@ with workflow.unsafe.imports_passed_through():
 
 # Temporal handles timeouts and retries. The extractor's own retry loop is off in the worker,
 # so the two don't multiply.
-BATCH_TIMEOUT = timedelta(seconds=300)  # a model that reasons first can take minutes on a dense batch
+BATCH_TIMEOUT = timedelta(seconds=600)  # a model that reasons first can take minutes on a dense batch
 MATCH_TIMEOUT = timedelta(seconds=60)  # one pair is a much smaller question than one batch
 LLM_RETRIES = RetryPolicy(
     initial_interval=timedelta(seconds=1),

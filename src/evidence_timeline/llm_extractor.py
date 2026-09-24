@@ -22,7 +22,7 @@ DEFAULT_BASE_URL = "https://openrouter.ai/api/v1"
 TEMPERATURE = 0.0
 # A ceiling, not a cost: only the tokens used are paid for. Reasoning models count their
 # hidden thinking against it too, which can take more than half of it on a dense batch.
-MAX_OUTPUT_TOKENS = 32_000
+MAX_OUTPUT_TOKENS = 42_000
 # Worth retrying: timeout, rate limit and temporary server problems.
 RETRYABLE_STATUS_CODES = {408, 429, 500, 502, 503, 504}
 

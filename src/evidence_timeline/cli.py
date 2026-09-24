@@ -31,7 +31,7 @@ from evidence_timeline.llm_matcher import LLMMatcher
 from evidence_timeline.pipeline import run_case
 from evidence_timeline.storage import save_run
 from evidence_timeline.worker import DEFAULT_ADDRESS, TASK_QUEUE, connect, run_worker
-from evidence_timeline.workflows import BATCH_TIMEOUT, BuildTimelineWorkflow
+from evidence_timeline.workflows import BATCH_TIMEOUT, MATCH_TIMEOUT, BuildTimelineWorkflow
 
 
 def extract(args: argparse.Namespace) -> int:
@@ -56,7 +56,9 @@ async def run_extraction(args: argparse.Namespace) -> TimelineRun:
         return await run_case(args.case_dir, FakeExtractor(), args.max_chars)
 
     config = create_llm_config(args.timeout, args.max_attempts, args.max_concurrent)
-    extractor, matcher = LLMExtractor(config), LLMMatcher(config)
+    # A "same event?" question gets the same time limit as in the Temporal worker.
+    match_config = create_llm_config(MATCH_TIMEOUT.total_seconds(), args.max_attempts, args.max_concurrent)
+    extractor, matcher = LLMExtractor(config), LLMMatcher(match_config)
     try:
         return await run_case(args.case_dir, extractor, args.max_chars, matcher)
     finally:
@@ -178,7 +180,9 @@ def main(argv: list[str] | None = None) -> int:
     extract_parser.add_argument("--extractor", choices=["fake", "llm"], required=True)
     extract_parser.add_argument("--output", type=Path, help="default: runs/case_<id>_<extractor>_<time>.json")
     extract_parser.add_argument("--max-chars", type=int, default=20_000, help="characters per batch")
-    extract_parser.add_argument("--timeout", type=float, default=300, help="seconds allowed per LLM request")
+    extract_parser.add_argument(
+        "--timeout", type=float, default=BATCH_TIMEOUT.total_seconds(), help="seconds allowed per batch request"
+    )
     extract_parser.add_argument("--max-attempts", type=int, default=3, help="tries per batch")
     extract_parser.add_argument("--max-concurrent", type=int, default=4, help="LLM requests running at the same time")
     extract_parser.add_argument("--database-url", help="default: DATABASE_URL; without it the run is only saved as JSON")
