@@ -22,7 +22,7 @@ from evidence_timeline.models import (
     CasePlan,
     CaseRequest,
     EventPair,
-    MatchDecision,
+    MatchResult,
     TimelineRun,
 )
 from evidence_timeline.timeline import build_timeline_events
@@ -56,9 +56,9 @@ class Activities:
         return BatchOutcome(report=report, events=build_timeline_events(batch, result.events))
 
     @activity.defn
-    async def match_pair(self, pair: EventPair) -> MatchDecision:
+    async def match_pair(self, pair: EventPair) -> MatchResult:
         if self.matcher is None:  # a fake run has no model to ask, so nothing is merged
-            return MatchDecision(same_event=False, reason="no matcher configured")
+            return MatchResult(same_event=False, reason="no matcher configured")
         return await self.matcher.is_same(pair)
 
     @activity.defn

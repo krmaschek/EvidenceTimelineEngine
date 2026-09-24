@@ -10,7 +10,7 @@ import datetime as dt
 import itertools
 from typing import Protocol
 
-from evidence_timeline.models import EventPair, MatchDecision, PairDecision, TimelineEvent
+from evidence_timeline.models import EventPair, MatchResult, PairDecision, TimelineEvent
 from evidence_timeline.timeline import DATE_REVIEW_REASONS, date_range
 
 # How many days apart two records of the same event may be. Wide enough for sources that
@@ -157,4 +157,4 @@ def merged_reasons(members: list[TimelineEvent], date_precision: str) -> list[st
 class EventMatcher(Protocol):
     """Answers the one question this module cannot: are these two records of the same event?"""
 
-    async def is_same(self, pair: EventPair) -> MatchDecision: ...
+    async def is_same(self, pair: EventPair) -> MatchResult: ...

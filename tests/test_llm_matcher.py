@@ -28,7 +28,8 @@ PAIR = EventPair(
 
 def reply(same_event: bool = True, reason: str = "B03 refers back to the X-ray in B01") -> httpx.Response:
     answer = json.dumps({"same_event": same_event, "reason": reason})
-    return httpx.Response(200, json={"choices": [{"message": {"content": answer}}]})
+    body = {"choices": [{"message": {"content": answer}}], "usage": {"total_tokens": 42, "cost": 0.001}}
+    return httpx.Response(200, json=body)
 
 
 def decide(response: httpx.Response, pair: EventPair = PAIR):
@@ -64,6 +65,12 @@ def test_a_no_is_read_back():
     decision, _ = decide(reply(same_event=False, reason="two separate sessions"))
 
     assert not decision.same_event
+
+
+def test_the_cost_reported_by_the_provider_is_kept():
+    decision, _ = decide(reply())
+
+    assert decision.usage == {"total_tokens": 42, "cost": 0.001}
 
 
 def test_a_failed_request_raises_so_the_caller_can_retry_or_give_up():

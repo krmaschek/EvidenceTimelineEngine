@@ -189,6 +189,15 @@ class MatchDecision(BaseModel):
     reason: str
 
 
+class MatchResult(BaseModel):
+    """The matcher's answer and what the request cost. MatchDecision is the schema the model fills in,
+    so the usage cannot go there."""
+
+    same_event: bool
+    reason: str
+    usage: dict[str, Any] | None = None
+
+
 class PairDecision(BaseModel):
     """The matcher's answer to one pair, kept in the run so every merge can be explained."""
 
@@ -196,6 +205,7 @@ class PairDecision(BaseModel):
     b: str  # event_id
     same_event: bool
     reason: str
+    usage: dict[str, Any] | None = None  # token counts and cost reported by the provider; None in older runs
 
 
 class BatchReport(BaseModel):

@@ -122,10 +122,12 @@ async def decide_pair(pair: EventPair, matcher: EventMatcher | None) -> PairDeci
     if matcher is None:  # no matcher (a fake run), so nothing is merged
         return None
     try:
-        decision = await matcher.is_same(pair)
+        result = await matcher.is_same(pair)
     except (TimeoutError, httpx.HTTPError, ValueError, KeyError, IndexError):
         return None  # could not decide: a duplicate is better than a wrong merge
-    return PairDecision(a=pair.a.event_id, b=pair.b.event_id, same_event=decision.same_event, reason=decision.reason)
+    return PairDecision(
+        a=pair.a.event_id, b=pair.b.event_id, same_event=result.same_event, reason=result.reason, usage=result.usage
+    )
 
 
 def build_run(

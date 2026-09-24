@@ -10,7 +10,7 @@ from typing import Any
 import httpx
 
 from evidence_timeline.llm_extractor import MAX_OUTPUT_TOKENS, TEMPERATURE, LLMConfig
-from evidence_timeline.models import EventPair, MatchDecision
+from evidence_timeline.models import EventPair, MatchDecision, MatchResult
 from evidence_timeline.prompts import build_match_messages
 
 
@@ -29,7 +29,7 @@ class LLMMatcher:
     async def close(self) -> None:
         await self.client.aclose()
 
-    async def is_same(self, pair: EventPair) -> MatchDecision:
+    async def is_same(self, pair: EventPair) -> MatchResult:
         request: dict[str, Any] = {
             "model": self.config.model,
             "messages": build_match_messages(pair),
@@ -52,5 +52,6 @@ class LLMMatcher:
             async with asyncio.timeout(self.config.timeout_seconds):
                 response = await self.client.post("chat/completions", json=request)
         response.raise_for_status()
-        answer = response.json()["choices"][0]["message"]["content"]
-        return MatchDecision.model_validate_json(answer)
+        reply = response.json()
+        answer = MatchDecision.model_validate_json(reply["choices"][0]["message"]["content"])
+        return MatchResult(same_event=answer.same_event, reason=answer.reason, usage=reply.get("usage"))

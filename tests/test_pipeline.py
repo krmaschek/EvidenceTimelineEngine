@@ -5,7 +5,7 @@ import pytest
 from helpers import CASE_A_DIR, CASE_B_DIR, DATASET_DIR, REPO_ROOT, make_event, make_quote
 
 from evidence_timeline.extractors import ExtractionError, ExtractionResult, FakeExtractor
-from evidence_timeline.models import Batch, Domain, EventPair, MatchDecision, TimelineRun
+from evidence_timeline.models import Batch, Domain, EventPair, MatchResult, TimelineRun
 from evidence_timeline.pipeline import run_case
 
 
@@ -110,7 +110,7 @@ def test_the_same_event_found_in_two_batches_is_kept_twice():
 
 def test_a_matcher_that_times_out_leaves_the_events_separate():
     class TimingOutMatcher:
-        async def is_same(self, pair: EventPair) -> MatchDecision:
+        async def is_same(self, pair: EventPair) -> MatchResult:
             raise TimeoutError
 
     # The fake extractor gives four undated events of the same kind, so every pair is asked about.

@@ -20,7 +20,7 @@ from evidence_timeline.extractors import (
     PermanentExtractionError,
 )
 from evidence_timeline.merge import EventMatcher
-from evidence_timeline.models import Batch, CaseRequest, Domain, EventPair, MatchDecision, TimelineRun
+from evidence_timeline.models import Batch, CaseRequest, Domain, EventPair, MatchResult, TimelineRun
 from evidence_timeline.worker import TASK_QUEUE
 from evidence_timeline.workflows import BuildTimelineWorkflow
 
@@ -55,8 +55,8 @@ class WrongKeyExtractor:
 class AlwaysTheSameMatcher:
     """Says yes to every pair, so the tests can see the merging without a model."""
 
-    async def is_same(self, pair: EventPair) -> MatchDecision:
-        return MatchDecision(same_event=True, reason="test matcher")
+    async def is_same(self, pair: EventPair) -> MatchResult:
+        return MatchResult(same_event=True, reason="test matcher", usage={"cost": 0.001})
 
 
 async def run_workflow(
@@ -126,4 +126,5 @@ def test_a_worker_with_a_matcher_merges_what_it_confirms():
     assert len(run.events) == 1
     assert len(run.events[0].merged_from) == 4
     assert len(run.pair_decisions) == 6  # every pair of the four events, each with its answer
+    assert all(decision.usage == {"cost": 0.001} for decision in run.pair_decisions)  # each question's cost is kept
     assert [quote.document_id for quote in run.events[0].evidence] == ["A01", "A02", "A03", "A04"]

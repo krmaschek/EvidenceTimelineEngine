@@ -35,7 +35,7 @@ with workflow.unsafe.imports_passed_through():
 # Temporal handles timeouts and retries. The extractor's own retry loop is off in the worker,
 # so the two don't multiply.
 BATCH_TIMEOUT = timedelta(seconds=600)  # a model that reasons first can take minutes on a dense batch
-MATCH_TIMEOUT = timedelta(seconds=60)  # one pair is a much smaller question than one batch
+MATCH_TIMEOUT = timedelta(seconds=120)  # one pair is a much smaller question than one batch
 LLM_RETRIES = RetryPolicy(
     initial_interval=timedelta(seconds=1),
     backoff_coefficient=2.0,
@@ -128,7 +128,7 @@ class BuildTimelineWorkflow:
     async def match_pair(self, pair: EventPair) -> PairDecision | None:
         """Ask a worker whether two events are the same. None means there is no answer, so they stay separate."""
         try:
-            decision = await workflow.execute_activity_method(
+            result = await workflow.execute_activity_method(
                 Activities.match_pair,
                 pair,
                 start_to_close_timeout=MATCH_TIMEOUT,
@@ -137,4 +137,6 @@ class BuildTimelineWorkflow:
         except ActivityError:
             # A pair we could not decide is left alone. A duplicate is better than a wrong merge.
             return None
-        return PairDecision(a=pair.a.event_id, b=pair.b.event_id, same_event=decision.same_event, reason=decision.reason)
+        return PairDecision(
+            a=pair.a.event_id, b=pair.b.event_id, same_event=result.same_event, reason=result.reason, usage=result.usage
+        )
