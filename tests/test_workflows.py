@@ -22,7 +22,7 @@ from evidence_timeline.extractors import (
 from evidence_timeline.merge import EventMatcher
 from evidence_timeline.models import Batch, CaseRequest, Domain, EventPair, MatchResult, TimelineRun
 from evidence_timeline.worker import TASK_QUEUE
-from evidence_timeline.workflows import BuildTimelineWorkflow
+from evidence_timeline.workflows import LLM_RETRIES, BuildTimelineWorkflow
 
 
 class FailingExtractor:
@@ -92,7 +92,7 @@ def test_a_batch_that_never_succeeds_makes_the_run_partial():
     assert [batch.status for batch in run.batches] == ["succeeded", "failed", "succeeded"]
 
     failed = run.batches[1]
-    assert failed.attempts == 3  # Temporal gave up after LLM_RETRIES
+    assert failed.attempts == LLM_RETRIES.maximum_attempts  # Temporal gave up after every attempt
     assert "provider down" in failed.error
     assert failed.lines == ["B03:1-11", "B04:1-10"]
     assert {event.batch_id for event in run.events} == {"B-batch-001", "B-batch-003"}

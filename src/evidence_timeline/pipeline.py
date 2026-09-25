@@ -112,6 +112,7 @@ async def process_batch(batch: Batch, domain: Domain, extractor: EventExtractor)
         status="succeeded",
         attempts=result.attempts,
         model=result.model,
+        provider=result.provider,
         usage=result.usage,
     )
     return BatchOutcome(report=succeeded, events=build_timeline_events(batch, result.events))

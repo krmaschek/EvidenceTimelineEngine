@@ -68,9 +68,13 @@ def test_uncertain_dates_are_accepted_without_a_precise_date():
         {"date_precision": "conflicting", "alternative_dates": ["2025-04-09", "2025-04-10"]},  # conflict, yet a date
     ],
 )
-def test_date_fields_must_fit_the_precision(changes):
-    with pytest.raises(ValidationError, match="date fields do not fit"):
-        parse(event_json(**changes))
+def test_dates_that_do_not_fit_the_precision_are_cleared_and_flagged(changes):
+    event = parse(event_json(**changes))
+
+    assert event.date_precision == "unknown"
+    assert (event.date, event.date_earliest, event.date_latest, event.alternative_dates) == (None, None, None, [])
+    assert event.review_reasons[-1].startswith("dates removed: they did not fit date_precision=")
+    assert event.description == "Right knee MRI"  # the rest of the event is kept
 
 
 @pytest.mark.parametrize(

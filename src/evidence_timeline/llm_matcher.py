@@ -47,6 +47,8 @@ class LLMMatcher:
         if "openrouter.ai" in self.config.base_url:
             # Only use providers that support every parameter above, so the schema is enforced.
             request["provider"] = {"require_parameters": True}
+            if self.config.provider:
+                request["provider"]["only"] = [self.config.provider]  # this host only, not whichever is free
 
         async with self.semaphore:
             async with asyncio.timeout(self.config.timeout_seconds):

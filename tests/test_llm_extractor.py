@@ -26,7 +26,12 @@ EVENTS_JSON = json.dumps({"events": [make_event(evidence=[make_quote(1, LINE)]).
 
 
 def reply(content: str | None = EVENTS_JSON) -> httpx.Response:
-    body = {"model": "vendor/model-x", "choices": [{"message": {"content": content}}], "usage": {"total_tokens": 42}}
+    body = {
+        "model": "vendor/model-x",
+        "provider": "Host-A",
+        "choices": [{"message": {"content": content}}],
+        "usage": {"total_tokens": 42},
+    }
     return httpx.Response(200, json=body)
 
 
@@ -76,6 +81,16 @@ def test_request_asks_the_configured_model_for_strict_json():
     assert event_type["enum"] == ["visit", "procedure", "medication_start"]
 
 
+def test_a_pinned_provider_is_the_only_one_openrouter_may_use():
+    server = FakeServer(reply())
+    extractor, _ = make_extractor(server, CONFIG.model_copy(update={"provider": "alibaba"}))
+
+    asyncio.run(extractor.extract_events(BATCH, CLINICAL_DOMAIN))
+
+    assert json.loads(server.requests[0].content)["provider"] == {"require_parameters": True, "only": ["alibaba"]}
+    assert extractor.info.settings["provider"] == "alibaba"  # stored with the run
+
+
 def test_other_providers_get_no_openrouter_settings():
     server = FakeServer(reply())
     extractor, _ = make_extractor(server, CONFIG.model_copy(update={"base_url": "http://localhost:8000/v1"}))
@@ -86,13 +101,14 @@ def test_other_providers_get_no_openrouter_settings():
     assert "provider" not in json.loads(server.requests[0].content)
 
 
-def test_reply_becomes_events_with_model_and_usage():
+def test_reply_becomes_events_with_model_provider_and_usage():
     extractor, _ = make_extractor(FakeServer(reply()))
 
     result = asyncio.run(extractor.extract_events(BATCH, CLINICAL_DOMAIN))
 
     assert result.events[0].date == dt.date(2025, 1, 6)
     assert (result.attempts, result.model, result.usage) == (1, "vendor/model-x", {"total_tokens": 42})
+    assert result.provider == "Host-A"
 
 
 def test_api_key_is_not_printed_or_stored_with_the_run():
@@ -178,10 +194,9 @@ def test_invalid_output_is_retried_with_the_same_request():
     [
         lambda: reply(content="not json"),
         lambda: reply(content=None),
-        lambda: reply(content=EVENTS_JSON.replace('"exact"', '"approximate"')),  # breaks the date rules
         lambda: httpx.Response(200, json={"choices": []}),
     ],
-    ids=["not json", "no content", "breaks date rules", "no choices"],
+    ids=["not json", "no content", "no choices"],
 )
 def test_invalid_output_fails_the_batch_after_max_attempts(bad_reply):
     server = FakeServer(bad_reply(), bad_reply(), bad_reply())

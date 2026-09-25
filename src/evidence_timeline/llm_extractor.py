@@ -22,7 +22,7 @@ DEFAULT_BASE_URL = "https://openrouter.ai/api/v1"
 TEMPERATURE = 0.0
 # A ceiling, not a cost: only the tokens used are paid for. Reasoning models count their
 # hidden thinking against it too, which can take more than half of it on a dense batch.
-MAX_OUTPUT_TOKENS = 42_000
+MAX_OUTPUT_TOKENS = 65_536  # the most Google AI Studio allows for Gemini Flash
 # Worth retrying: timeout, rate limit and temporary server problems.
 RETRYABLE_STATUS_CODES = {408, 429, 500, 502, 503, 504}
 
@@ -34,6 +34,7 @@ class LLMConfig(BaseModel):
     timeout_seconds: float
     max_attempts: int
     max_concurrent_requests: int
+    provider: str | None = None  # an OpenRouter provider to use exclusively, e.g. "alibaba"
 
 
 class LLMExtractor:
@@ -63,6 +64,7 @@ class LLMExtractor:
                 "timeout_seconds": config.timeout_seconds,
                 "max_attempts": config.max_attempts,
                 "max_concurrent_requests": config.max_concurrent_requests,
+                "provider": config.provider,
             },
         )
 
@@ -88,6 +90,8 @@ class LLMExtractor:
         if "openrouter.ai" in self.config.base_url:
             # Only use providers that support every parameter above, so the schema is enforced.
             request["provider"] = {"require_parameters": True}
+            if self.config.provider:
+                request["provider"]["only"] = [self.config.provider]  # this host only, not whichever is free
 
         for attempt in range(1, self.config.max_attempts + 1):
             try:
@@ -105,7 +109,11 @@ class LLMExtractor:
                 answer = choice["message"]["content"]
                 events = ExtractionResponse.model_validate_json(answer).events
                 return ExtractionResult(
-                    events=events, attempts=attempt, model=reply.get("model"), usage=reply.get("usage")
+                    events=events,
+                    attempts=attempt,
+                    model=reply.get("model"),
+                    provider=reply.get("provider"),
+                    usage=reply.get("usage"),
                 )
 
             except httpx.HTTPStatusError as exc:

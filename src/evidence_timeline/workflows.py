@@ -34,12 +34,12 @@ with workflow.unsafe.imports_passed_through():
 
 # Temporal handles timeouts and retries. The extractor's own retry loop is off in the worker,
 # so the two don't multiply.
-BATCH_TIMEOUT = timedelta(seconds=600)  # a model that reasons first can take minutes on a dense batch
+BATCH_TIMEOUT = timedelta(seconds=1200)  # a model that reasons first can need over 10 minutes for a whole document
 MATCH_TIMEOUT = timedelta(seconds=120)  # one pair is a much smaller question than one batch
 LLM_RETRIES = RetryPolicy(
-    initial_interval=timedelta(seconds=1),
-    backoff_coefficient=2.0,
-    maximum_attempts=3,
+    initial_interval=timedelta(seconds=15),  # a rate limit (HTTP 429) can last minutes
+    backoff_coefficient=2.0,  # then 30 s, 60 s and 120 s
+    maximum_attempts=5,
     non_retryable_error_types=["PermanentExtractionError"],  # e.g. a wrong API key
 )
 # Without a policy Temporal retries forever. A missing folder or file, or a bad plan, won't fix

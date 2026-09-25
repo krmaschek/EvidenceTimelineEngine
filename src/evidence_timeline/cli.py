@@ -79,6 +79,7 @@ def create_llm_config(timeout: float, max_attempts: int, max_concurrent: int) ->
         timeout_seconds=timeout,
         max_attempts=max_attempts,
         max_concurrent_requests=max_concurrent,
+        provider=os.environ.get("LLM_PROVIDER") or None,
     )
 
 

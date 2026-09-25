@@ -51,6 +51,7 @@ class Activities:
             status="succeeded",
             attempts=activity.info().attempt,  # counted by Temporal, not by us
             model=result.model,
+            provider=result.provider,
             usage=result.usage,
         )
         return BatchOutcome(report=report, events=build_timeline_events(batch, result.events))

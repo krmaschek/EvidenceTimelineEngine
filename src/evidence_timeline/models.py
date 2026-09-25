@@ -130,7 +130,8 @@ class ExtractedEvent(BaseModel):
 
     @model_validator(mode="after")
     def check_dates(self) -> Self:
-        # A JSON schema cannot express these rules. Breaking them would invent or hide precision.
+        # A JSON schema cannot express these rules. When the model breaks them, its dates cannot be
+        # trusted: they are cleared and the event is flagged, instead of losing the whole answer.
         no_range = self.date_earliest is None and self.date_latest is None
         if self.date_precision == "exact":
             ok = self.date is not None and no_range and not self.alternative_dates
@@ -147,7 +148,10 @@ class ExtractedEvent(BaseModel):
         else:
             ok = self.date is None and no_range and not self.alternative_dates
         if not ok:
-            raise ValueError(f"date fields do not fit date_precision={self.date_precision!r}")
+            self.review_reasons.append(f"dates removed: they did not fit date_precision={self.date_precision!r}")
+            self.date_precision = "unknown"
+            self.date = self.date_earliest = self.date_latest = None
+            self.alternative_dates = []
         return self
 
 
@@ -215,6 +219,7 @@ class BatchReport(BaseModel):
     attempts: int
     error: str | None = None
     model: str | None = None  # the model the provider says it used
+    provider: str | None = None  # the host that answered, as OpenRouter reports it
     usage: dict[str, Any] | None = None  # token counts reported by the provider
 
 

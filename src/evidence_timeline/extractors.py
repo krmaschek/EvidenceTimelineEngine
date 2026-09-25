@@ -27,6 +27,7 @@ class ExtractionResult(BaseModel):
     events: list[ExtractedEvent]
     attempts: int
     model: str | None = None
+    provider: str | None = None
     usage: dict[str, Any] | None = None
 
 
