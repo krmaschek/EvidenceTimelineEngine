@@ -1,0 +1,8 @@
+{
+  "name": "echr",
+  "event_types": [
+    {"name": "procedure", "description": "the procedural dimension of the case: court proceedings (applications, complaints and appeals lodged with a court, hearings, judgments and decisions) and acts of other authorities that clearly have a procedural effect (ordering an arrest, discontinuing criminal proceedings)"},
+    {"name": "circumstance", "description": "the facts under judgment, including acts of authorities and other bodies whose power in the proceedings is not clear (complaints to bodies that are not courts, inspections, the police opening an investigation)"}
+  ],
+  "identifiers": "names of courts and authorities, application numbers and amounts"
+}
