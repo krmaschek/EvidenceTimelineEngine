@@ -1,0 +1,28 @@
+# Development study: which model and batch size to use. Choosing on these cases is allowed;
+# the final number comes from the unseen cases.
+dataset = "datasets/eventsmatter_v1"
+name = "dev15"                 # runs go to runs/dev15/
+spending_limit_usd = 16
+max_concurrent = 4             # LLM requests at once inside one case; cases run one at a time
+
+models = [
+    "google/gemini-3.8-flash",
+    "deepseek/deepseek-v4-pro-0813",   # a pinned version, not the "-latest" alias that can change mid-study
+    "qwen/qwen3.8-flash",
+]
+batch_sizes = [5_000, "whole"]        # characters per batch; "whole" sends each document in one request
+
+cases = [
+    "HOINESS_v_NORWAY", "KOSAITE_CYPIENE_AND_OTHERS_v_LITHUANIA", "NODI_v_HUNGARY",
+    "STANA_v_ROMANIA", "YAKUSHEV_v_UKRAINE", "YEVGENIY_ZAKHAROV_v_RUSSIA",
+    "DOKTOROV_v_BULGARIA", "EGILL_EINARSSON_v_ICELAND_No_2", "LOZOVYYE_v_RUSSIA",
+    "MOSKALEV_v_RUSSIA", "O_C_I_AND_OTHERS_v_ROMANIA", "SHVIDKIYE_v_RUSSIA",
+    "SIDOROVA_v_RUSSIA", "S_N_v_RUSSIA", "VISY_v_SLOVAKIA",
+]
+
+# One host per model. Otherwise OpenRouter spreads requests over hosts, some of which serve a
+# quantized copy of the model.
+[providers]
+"google/gemini-3.8-flash" = "google-ai-studio"   # the standard tier, not "flex" or "priority"
+"deepseek/deepseek-v4-pro-0813" = "alibaba"
+"qwen/qwen3.8-flash" = "alibaba"

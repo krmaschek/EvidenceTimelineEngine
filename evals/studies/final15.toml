@@ -1,0 +1,22 @@
+# Final test: the setup picked on dev15, run once on the 15 cases not used during development.
+# Nothing changes after this run; its result is the headline number.
+dataset = "datasets/eventsmatter_v1"
+name = "final15"               # runs go to runs/final15/
+spending_limit_usd = 5
+max_concurrent = 4             # same as dev15
+
+models = ["google/gemini-3.8-flash"]
+batch_sizes = [5_000]
+
+cases = [
+    # spare development cases
+    "MURUZHEVA_v_RUSSIA", "M_T_v_UKRAINE", "OTGON_v_THE_REPUBLIC_OF_MOLDOVA",
+    "PAKHTUSOV_v_RUSSIA", "PANYUSHKINY_v_RUSSIA", "RESIN_v_RUSSIA",
+    "SOLCAN_v_ROMANIA", "S_V_v_ITALY", "YERMAKOVICH_v_RUSSIA",
+    # the dataset's holdout cases
+    "ALTAY_v_TURKEY_No_2", "BELYAYEV_AND_OTHERS_v_UKRAINE", "BIGUN_v_UKRAINE",
+    "CABUCAK_v_GERMANY", "CAN_v_TURKEY", "CRISTIAN_CATALIN_UNGUREANU_v_ROMANIA",
+]
+
+[providers]
+"google/gemini-3.8-flash" = "google-ai-studio"   # the same host as in dev15
