@@ -139,8 +139,10 @@ def build_run(
     run_id: str,
     created_at: dt.datetime,
 ) -> TimelineRun:
-    """Combine the finished batches into one run. The id and time are passed in because a workflow
-    must get them from Temporal."""
+    """Combine the finished batches into one run.
+
+    The id and time are passed in, because a workflow must take them from Temporal.
+    """
     reports = [outcome.report for outcome in outcomes]
     events = [event for outcome in outcomes for event in outcome.events]
     merged = merge.merge_events(events, decisions)

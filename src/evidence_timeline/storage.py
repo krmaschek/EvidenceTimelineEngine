@@ -1,13 +1,10 @@
-"""Saving a finished run to PostgreSQL.
+"""Save a finished run to PostgreSQL.
 
-Two properties matter here:
+The whole run is written in one transaction, so a crash never leaves half a run behind.
+Every row is an UPSERT on its primary key, so a repeated save overwrites the same rows
+instead of adding new ones.
 
-- **All or nothing.** The whole run is written in one transaction, so a crash can
-  never leave a run holding some of its events.
-- **Safe to repeat.** Every row is written with an UPSERT on its primary key, so
-  saving the same run twice overwrites the same rows. A retried save adds nothing.
-
-The database is a sink: the pipeline does not know about it and runs fine without it.
+The pipeline does not know about the database and runs fine without it.
 """
 
 from typing import Any
@@ -41,7 +38,7 @@ async def save_run(run: TimelineRun, database_url: str) -> None:
 
 
 async def create_tables(engine: AsyncEngine) -> None:
-    """Create any missing table. There are no migrations in v1; changing a column means dropping the volume."""
+    """Create any missing table. There are no migrations, so changing a column means dropping the database volume."""
     async with engine.begin() as connection:
         await connection.run_sync(metadata.create_all)
 

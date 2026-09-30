@@ -1,11 +1,9 @@
-"""Evaluator only: score a saved run against the dataset's reference events.
+"""Score a saved run against the dataset's reference events.
 
-The extraction code never imports this module, so reference answers cannot
-reach a prompt.
-
-A person decides which prediction matches which reference event and writes
-that into a review file. This module checks the review against the dataset's
-matching rules and counts the results. Nothing is matched automatically.
+A person decides which prediction matches which reference event and writes it into a
+review file. This module checks those decisions against the matching rules and counts
+the results. The extraction code never imports it, so reference answers cannot reach
+a prompt.
 """
 
 import datetime as dt

@@ -10,7 +10,7 @@ from typing import Any, Literal, Self
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 EventStatus = Literal["completed", "planned"]
-# exact: one known day | approximate: only a date range | conflicting: sources disagree | unknown: no date
+# How sure the date is, in order: one known day, only a range, sources that disagree, no date.
 DatePrecision = Literal["exact", "approximate", "conflicting", "unknown"]
 # The steps of one workflow run, in order.
 Stage = Literal["planning", "extracting", "merging", "saving", "done"]
@@ -61,7 +61,7 @@ class ExtractorInfo(BaseModel):
 
 class EventTypeDefinition(BaseModel):
     name: str  # e.g. "visit"
-    description: str  # finishes the sentence '"visit" for ...', e.g. "visits and assessments"
+    description: str  # what the type covers, e.g. "visits and assessments"
 
 
 class Domain(BaseModel):
@@ -194,8 +194,10 @@ class MatchDecision(BaseModel):
 
 
 class MatchResult(BaseModel):
-    """The matcher's answer and what the request cost. MatchDecision is the schema the model fills in,
-    so the usage cannot go there."""
+    """The matcher's answer plus what the request cost.
+
+    The cost cannot go in MatchDecision, because that is the schema the model fills in.
+    """
 
     same_event: bool
     reason: str

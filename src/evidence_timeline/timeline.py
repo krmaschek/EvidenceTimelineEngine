@@ -31,7 +31,7 @@ def build_timeline_events(batch: Batch, extracted_events: list[ExtractedEvent]) 
             if error:
                 citation_errors.append(error)
 
-        # Our own reasons come first, so flagging never depends on the model. Then the model's reasons.
+        # Our own checks come first, so flagging never depends on the model.
         reasons: list[str] = []
         if event.date_precision in DATE_REVIEW_REASONS:
             reasons.append(DATE_REVIEW_REASONS[event.date_precision])

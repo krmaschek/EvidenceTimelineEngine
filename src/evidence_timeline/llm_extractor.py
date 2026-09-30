@@ -20,8 +20,7 @@ from evidence_timeline.prompts import build_messages
 
 DEFAULT_BASE_URL = "https://openrouter.ai/api/v1"
 TEMPERATURE = 0.0
-# A ceiling, not a cost: only the tokens used are paid for. Reasoning models count their
-# hidden thinking against it too, which can take more than half of it on a dense batch.
+# A ceiling, not a cost. Reasoning models count their hidden thinking against it too.
 MAX_OUTPUT_TOKENS = 65_536  # the most Google AI Studio allows for Gemini Flash
 # Worth retrying: timeout, rate limit and temporary server problems.
 RETRYABLE_STATUS_CODES = {408, 429, 500, 502, 503, 504}

@@ -12,7 +12,7 @@ from sqlalchemy import JSON, Boolean, Column, Date, DateTime, ForeignKey, Intege
 
 metadata = MetaData()
 
-# One row per `extract` command: the model, the settings and the prompt hash that produced the events.
+# One row per run: the model, settings and prompt hash that produced its events.
 runs = Table(
     "runs",
     metadata,
