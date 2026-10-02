@@ -180,7 +180,7 @@ def main(argv: list[str] | None = None) -> int:
     extract_parser.add_argument("case_dir", type=Path, help="folder with the case's .md files")
     extract_parser.add_argument("--extractor", choices=["fake", "llm"], required=True)
     extract_parser.add_argument("--output", type=Path, help="default: runs/case_<id>_<extractor>_<time>.json")
-    extract_parser.add_argument("--max-chars", type=int, default=20_000, help="characters per batch")
+    extract_parser.add_argument("--max-chars", type=int, default=5_000, help="characters per batch")
     extract_parser.add_argument(
         "--timeout", type=float, default=BATCH_TIMEOUT.total_seconds(), help="seconds allowed per batch request"
     )
@@ -198,7 +198,7 @@ def main(argv: list[str] | None = None) -> int:
 
     submit_parser = commands.add_parser("submit", help="give one case to a worker and wait for the timeline")
     submit_parser.add_argument("case_dir", type=Path, help="folder with the case's .md files")
-    submit_parser.add_argument("--max-chars", type=int, default=20_000, help="characters per batch")
+    submit_parser.add_argument("--max-chars", type=int, default=5_000, help="characters per batch")
     submit_parser.add_argument("--address", default=DEFAULT_ADDRESS, help="Temporal server")
     submit_parser.add_argument("--output", type=Path, help="default: runs/case_<id>_<extractor>_<time>.json")
     submit_parser.set_defaults(handler=submit)
