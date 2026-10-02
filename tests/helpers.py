@@ -30,7 +30,7 @@ from evidence_timeline.worker import TASK_QUEUE
 from evidence_timeline.workflows import BuildTimelineWorkflow
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-DATASET_DIR = REPO_ROOT / "evidence_timeline_dataset_v1"
+DATASET_DIR = REPO_ROOT / "datasets" / "clinical_v1"
 CASE_A_DIR = DATASET_DIR / "inputs" / "case_A"
 CASE_B_DIR = DATASET_DIR / "inputs" / "case_B"
 GOLD_DIR = DATASET_DIR / "gold"
