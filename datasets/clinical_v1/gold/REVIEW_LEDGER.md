@@ -24,7 +24,7 @@ Evaluator-only: do not supply to extraction.
 | C-E02 | medication_start / completed | 2025-04-02 | C01:L9 |
 | C-E03 | procedure / planned | 2025-04-20 | C01:L10, C04:L11 |
 | C-E04 | visit / completed | 2025-04-12 | C02:L8 |
-| C-E05 | procedure / completed | {'start': '2025-03-01', 'end': '2025-03-31'} | C02:L9 |
-| C-E06 | procedure / completed | ['2025-04-14', '2025-04-15'] | C03:L8, C04:L9 |
+| C-E05 | procedure / completed | March 2025 (2025-03-01 to 2025-03-31) | C02:L9 |
+| C-E06 | procedure / completed | 2025-04-14 or 2025-04-15 (conflicting) | C03:L8, C04:L9 |
 | C-E07 | visit / completed | 2025-04-17 | C04:L8 |
 | C-E08 | procedure / planned | 2025-04-18 | C04:L10 |

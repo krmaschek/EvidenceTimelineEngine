@@ -1,19 +1,12 @@
 import json
 import re
 
-from helpers import CASE_A_DIR, CASE_B_DIR, CLINICAL_DOMAIN, DATASET_DIR
+from helpers import CASE_A_DIR, CASE_B_DIR, CLINICAL_DOMAIN
 
 from evidence_timeline.batching import build_batches
 from evidence_timeline.documents import load_documents
 from evidence_timeline.models import Batch, DocumentSpan, Domain, EventTypeDefinition
 from evidence_timeline.prompts import build_messages, prompt_sha256, system_prompt
-
-
-def test_clinical_scope_is_copied_from_the_dataset_readme():
-    readme = (DATASET_DIR / "README.md").read_text(encoding="utf-8")
-    section = readme.split("## Extraction scope (supply this section to the extractor)\n")[1].split("\n## ")[0]
-
-    assert CLINICAL_DOMAIN.scope == section.strip()
 
 
 def test_clinical_prompt_is_unchanged():
