@@ -1,7 +1,7 @@
 """The extraction interface used by the pipeline, plus a fake extractor for offline runs.
 
 The pipeline only knows `EventExtractor`. Supporting another LLM API means
-writing one more class with an `info` attribute and an `extract` method.
+writing one more class with an `info` attribute and an `extract_events` method.
 """
 
 from typing import Any, Protocol

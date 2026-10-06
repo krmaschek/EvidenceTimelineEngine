@@ -2,7 +2,7 @@
 # Start with: docker compose up -d
 # Wipe with:  docker compose down -v
 #
-# Host port 5433, because another project on this machine already uses 5432.
+# Host port 5433, so it doesn't clash with a local PostgreSQL on 5432.
 
 services:
   db:
@@ -25,7 +25,7 @@ services:
   # Temporal's development server: the server and its web UI in one container.
   # UI: http://localhost:8233. Histories are kept in a file, so a restart does not lose them.
   temporal:
-    image: temporalio/temporal:latest
+    image: temporalio/temporal:1.9.1  # CLI 1.9.1, with server 1.32.0 and UI 2.54.1
     container_name: evidence-timeline-temporal
     command: server start-dev --ip 0.0.0.0 --db-filename /home/temporal/temporal.db
     ports:

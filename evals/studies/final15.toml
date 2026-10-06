@@ -9,7 +9,7 @@ models = ["google/gemini-3.8-flash"]
 batch_sizes = [5_000]
 
 cases = [
-    # spare development cases
+    # kept aside during development and never run before
     "MURUZHEVA_v_RUSSIA", "M_T_v_UKRAINE", "OTGON_v_THE_REPUBLIC_OF_MOLDOVA",
     "PAKHTUSOV_v_RUSSIA", "PANYUSHKINY_v_RUSSIA", "RESIN_v_RUSSIA",
     "SOLCAN_v_ROMANIA", "S_V_v_ITALY", "YERMAKOVICH_v_RUSSIA",

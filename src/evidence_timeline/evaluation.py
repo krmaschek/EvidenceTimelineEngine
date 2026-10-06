@@ -1,6 +1,6 @@
 """Score a saved run against the dataset's reference events.
 
-A person decides which prediction matches which reference event and writes it into a
+A reviewer decides which prediction matches which reference event and writes it into a
 review file. This module checks those decisions against the matching rules and counts
 the results. The extraction code never imports it, so reference answers cannot reach
 a prompt.
@@ -53,7 +53,7 @@ class ReferenceCase(BaseModel):
     events: list[ReferenceEvent]
 
 
-# --- The human review ------------------------------------------------------------
+# --- The review ------------------------------------------------------------------
 
 
 class Decision(BaseModel):
