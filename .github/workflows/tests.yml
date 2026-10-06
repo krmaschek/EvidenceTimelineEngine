@@ -1,0 +1,14 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.2.0
+      - run: uv sync --locked   # Python from .python-version, packages exactly as in uv.lock
+      - run: uv run pytest      # the database tests skip, because there is no DATABASE_URL here

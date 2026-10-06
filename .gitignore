@@ -13,7 +13,7 @@ dist/
 .env.*
 !.env.example
 
-# Run outputs, reviews and eval results stay local. Files already committed (cases A-C) stay tracked.
+# Run outputs, reviews and eval results stay local. Files already committed stay tracked.
 runs/
 evals/reviews/
 evals/results/
